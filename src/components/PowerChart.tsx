@@ -15,7 +15,7 @@ interface PowerChartProps {
 }
 
 // Helper functions for generating chart data
-const generatePowerCurve = (params: PowerParameters, sampleSizes: number[]): any[] => {
+const generatePowerCurve = (params: PowerParameters, sampleSizes: number[]): Array<{sampleSize: number; power: number}> => {
   return sampleSizes.map(n => {
     const newParams = { ...params, sampleSize: n };
     newParams.power = null;
@@ -27,7 +27,7 @@ const generatePowerCurve = (params: PowerParameters, sampleSizes: number[]): any
   });
 };
 
-const generateEffectSizeCurve = (params: PowerParameters, effectSizes: number[]): any[] => {
+const generateEffectSizeCurve = (params: PowerParameters, effectSizes: number[]): Array<{effectSize: number; power: number}> => {
   return effectSizes.map(es => {
     const newParams = { ...params, effectSize: es };
     newParams.power = null;
@@ -40,7 +40,7 @@ const generateEffectSizeCurve = (params: PowerParameters, effectSizes: number[])
 };
 
 export function PowerChart({ params, targetParameter }: PowerChartProps) {
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<Array<{[key: string]: number}>>([]);
   const [chartType, setChartType] = useState<"sampleSize" | "effectSize">("sampleSize");
   
   useEffect(() => {

@@ -54,7 +54,7 @@ export function PowerCalculator() {
     const paramsCopy = { ...params };
     
     // Set the target parameter to null before calculation
-    paramsCopy[targetParameter as keyof PowerParameters] = null;
+    paramsCopy[targetParameter] = null;
     
     // Calculate the target parameter
     let result: number | null = null;

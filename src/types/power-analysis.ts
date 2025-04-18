@@ -24,11 +24,11 @@ export interface PowerParameters {
   significanceLevel: number | null;
   power: number | null;
   tailType?: "one" | "two";
-  groups?: number;
-  observations?: number;
-  correlation?: number;
-  predictors?: number;
-  responseVariables?: number;
+  groups?: number | null;
+  observations?: number | null;
+  correlation?: number | null;
+  predictors?: number | null;
+  responseVariables?: number | null;
 }
 
 export interface TestConfig {
