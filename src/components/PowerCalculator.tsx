@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PowerParameters, StatisticalTest } from "@/types/power-analysis";
@@ -53,7 +54,7 @@ export function PowerCalculator() {
     const paramsCopy = { ...params };
     
     // Set the target parameter to null before calculation
-    paramsCopy[targetParameter] = null;
+    paramsCopy[targetParameter as keyof PowerParameters] = null;
     
     // Calculate the target parameter
     let result: number | null = null;

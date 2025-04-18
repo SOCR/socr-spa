@@ -83,17 +83,6 @@ export const TEST_CONFIGURATIONS: TestConfigMap = {
       tailType: "two"
     }
   },
-  "chi-square": {
-    name: "Chi-square Test",
-    description: "General chi-square test",
-    parameters: ["sampleSize", "effectSize", "significanceLevel", "power"],
-    additionalControls: {
-      groups: true
-    },
-    defaultValues: {
-      groups: 2
-    }
-  },
   "chi-square-gof": {
     name: "Chi-square Goodness of Fit",
     description: "Tests if observed frequencies match expected frequencies",

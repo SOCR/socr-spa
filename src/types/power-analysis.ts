@@ -1,65 +1,62 @@
 
 export type StatisticalTest = 
-  | "ttest-one-sample"
-  | "ttest-two-sample" 
-  | "ttest-paired"
-  | "anova"
-  | "anova-two-way"
-  | "correlation"
-  | "correlation-difference"
-  | "chi-square"
-  | "chi-square-gof"
-  | "chi-square-contingency"
-  | "proportion-test"
-  | "proportion-difference"
-  | "sign-test"
-  | "linear-regression"
-  | "multiple-regression"
-  | "set-correlation"
-  | "multivariate";
+  "ttest-one-sample" | 
+  "ttest-two-sample" | 
+  "ttest-paired" | 
+  "anova" | 
+  "anova-two-way" | 
+  "correlation" |
+  "correlation-difference" |
+  "proportion-test" |
+  "sign-test" |
+  "proportion-difference" |
+  "chi-square-gof" |
+  "chi-square-contingency" |
+  "linear-regression" |
+  "multiple-regression" |
+  "set-correlation" |
+  "multivariate";
 
-export type PowerParameters = {
+export interface PowerParameters {
   test: StatisticalTest;
   sampleSize: number | null;
   effectSize: number | null;
   significanceLevel: number | null;
   power: number | null;
-  // Additional parameters for specific tests
+  tailType?: "one" | "two";
   groups?: number;
-  predictors?: number;
-  responseVariables?: number;
   observations?: number;
   correlation?: number;
-  tailType?: "one" | "two";
-};
+  predictors?: number;
+  responseVariables?: number;
+}
 
-export type EffectSizeCategory = "small" | "medium" | "large";
-
-export type TestEffectSizeMap = {
-  [key in StatisticalTest]: {
-    small: number;
-    medium: number;
-    large: number;
-    label: string;
-  };
-};
-
-// Configuration for test-specific parameters
-export type TestConfig = {
+export interface TestConfig {
   name: string;
   description: string;
   parameters: Array<keyof Omit<PowerParameters, "test">>;
   additionalControls?: {
+    tailType?: boolean;
     groups?: boolean;
-    predictors?: boolean;
-    responseVariables?: boolean;
     observations?: boolean;
     correlation?: boolean;
-    tailType?: boolean;
+    predictors?: boolean;
+    responseVariables?: boolean;
   };
   defaultValues?: Partial<PowerParameters>;
-};
+}
 
-export type TestConfigMap = {
-  [key in StatisticalTest]: TestConfig;
-};
+export interface TestConfigMap {
+  [key: string]: TestConfig;
+}
+
+export interface EffectSizeConfig {
+  small: number;
+  medium: number;
+  large: number;
+  label: string;
+}
+
+export interface EffectSizeMap {
+  [key: string]: EffectSizeConfig;
+}
