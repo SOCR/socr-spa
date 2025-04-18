@@ -7,9 +7,19 @@ export const EFFECT_SIZE_MAP: TestEffectSizeMap = {
   "ttest-two-sample": { small: 0.2, medium: 0.5, large: 0.8, label: "Cohen's d" },
   "ttest-paired": { small: 0.2, medium: 0.5, large: 0.8, label: "Cohen's d" },
   "anova": { small: 0.1, medium: 0.25, large: 0.4, label: "Cohen's f" },
+  "anova-two-way": { small: 0.1, medium: 0.25, large: 0.4, label: "Cohen's f" },
   "correlation": { small: 0.1, medium: 0.3, large: 0.5, label: "Cohen's r" },
+  "correlation-difference": { small: 0.1, medium: 0.3, large: 0.5, label: "Cohen's q" },
   "chi-square": { small: 0.1, medium: 0.3, large: 0.5, label: "Cohen's w" },
+  "chi-square-gof": { small: 0.1, medium: 0.3, large: 0.5, label: "Cohen's w" },
+  "chi-square-contingency": { small: 0.1, medium: 0.3, large: 0.5, label: "Cohen's w" },
+  "proportion-test": { small: 0.05, medium: 0.15, large: 0.25, label: "Cohen's g" },
+  "proportion-difference": { small: 0.1, medium: 0.3, large: 0.5, label: "Cohen's h" },
+  "sign-test": { small: 0.05, medium: 0.15, large: 0.25, label: "Cohen's g" },
   "linear-regression": { small: 0.02, medium: 0.15, large: 0.35, label: "Cohen's f²" },
+  "multiple-regression": { small: 0.02, medium: 0.15, large: 0.35, label: "Cohen's f²" },
+  "set-correlation": { small: 0.02, medium: 0.13, large: 0.26, label: "Cohen's f²" },
+  "multivariate": { small: 0.02, medium: 0.15, large: 0.35, label: "Cohen's f²" }
 };
 
 // Normal distribution cumulative density function
