@@ -1,73 +1,72 @@
-# Welcome to your Lovable project
+# SOCR Statistical Power Analyzer
 
-## Project info
+![](https://github.com/SOCR/socr-spa/blob/main/SOCR_StatisticalPowerAnalyzer.png?raw=true)
 
-**URL**: https://lovable.dev/projects/4412d76d-31a4-4cf1-9bb3-aa4ffbf37d11
+This [SOCR project](https://socr.umich.edu/) supports interactive calculation of statistical power, sample size, effect size, and significance level. 
 
-## How can I edit this code?
+## DIsclaimer
 
-There are several ways of editing your application.
+This app is not FDA approved. It's intendend for demonstration, education, and research purposes only. Always consult with a statistician for complex study designs.
 
-**Use Lovable**
+## Technical Details
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/4412d76d-31a4-4cf1-9bb3-aa4ffbf37d11) and start prompting.
+Power analysis is a statistical approach that explicates the relations between multiple parameters that affect experimental designs. It helps researchers determine the sample size needed to detect an effect of a given size with a specified level of confidence.
 
-Changes made via Lovable will be committed automatically to this repo.
+### The Five Key Components
 
-**Use your preferred IDE**
+    Statistical Test: The specific statistical inference method used to analyze your data (e.g., t-test, ANOVA, correlation).
+    Sample Size: The number of observations in your study. Larger samples provide more statistical power but require more resources.
+    Effect Size: How strong the expected effect is. Common measures include:
+        Cohen's d (t-tests): 0.2 (small), 0.5 (medium), 0.8 (large)
+        Cohen's f (ANOVA): 0.1 (small), 0.25 (medium), 0.4 (large)
+        Cohen's r (correlation): 0.1 (small), 0.3 (medium), 0.5 (large)
+        Cohen's w (chi-square): 0.1 (small), 0.3 (medium), 0.5 (large)
+        Cohen's f² (regression): 0.02 (small), 0.15 (medium), 0.35 (large)
+    Significance Level (α): The probability of Type I error (false positive) - finding an effect that isn't actually there. Commonly set at 0.05.
+    Power (1-β): The probability of detecting a true effect (sensitivity). Equals 1 minus the probability of a Type II error (false negative). Power of 0.8 (80%) is often considered acceptable.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Relationship Between Parameters
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+These five parameters are interconnected. When you specify any four of them, you can calculate the fifth:
 
-Follow these steps:
+    Increasing sample size → increases power
+    Larger effect sizes → increases power
+    Stricter significance level (smaller α) → decreases power
+    Higher required power → requires larger sample sizes
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### Statistical Tests and Effect Size Measures
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+T-Tests
 
-# Step 3: Install the necessary dependencies.
-npm i
+Cohen's d measures the standardized difference between two means: d = (Mean₁ - Mean₂) / Pooled Standard Deviation
+ANOVA
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+Cohen's f is used for ANOVA: f = sqrt(η² / (1 - η²)) where η² (eta squared) is the proportion of variance explained.
+Correlation
 
-**Edit a file directly in GitHub**
+Cohen's r is the correlation coefficient itself.
+Chi-Square Tests
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Cohen's w represents the discrepancy between observed and expected proportions.
+Linear Regression
 
-**Use GitHub Codespaces**
+Cohen's f² is calculated as R² / (1 - R²) where R² is the coefficient of determination.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Common Scenarios
 
-## What technologies are used for this project?
+    Sample Size Determination: When planning a study, researchers often want to know how many participants they need to detect an expected effect size with adequate power.
+    Power Calculation: After a study is completed or with a fixed sample size, calculating the power to detect various effect sizes helps interpret results.
+    Minimum Detectable Effect: For a fixed sample size and desired power, calculating the smallest effect size that can be reliably detected.
 
-This project is built with:
+### Important Considerations
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+    Power analyses are based on statistical assumptions that should be carefully evaluated.
+    Effect size estimates from previous studies may not be directly applicable to new research contexts.
+    Practical significance (meaningful real-world impact) is distinct from statistical significance.
+    Overpowered studies might detect trivially small effects with little practical importance.
+    Underpowered studies risk failing to detect meaningful effects.
 
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/4412d76d-31a4-4cf1-9bb3-aa4ffbf37d11) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## References
+ - [SOCR](https://socr.umich.edu),  [SOCR HTML5 Webapps](https://socr.umich.edu/HTML5/), [SOCR GAIMs](https://socr.umich.edu/GAIM/)
+ - [Live SOCR Statistical Power Analyzer Webapp]([https://ibc-broad.gray-rain.com/](https://socr-spa.gray-rain.com/))
+ - [Source code on GitHub](https://github.com/SOCR/socr-spa)
