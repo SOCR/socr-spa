@@ -54,7 +54,8 @@ export function PowerCalculator() {
     const paramsCopy = { ...params };
     
     // Set the target parameter to null before calculation
-    paramsCopy[targetParameter] = null;
+    // Use type assertion to avoid type error
+    (paramsCopy[targetParameter] as any) = null;
     
     // Calculate the target parameter
     let result: number | null = null;
