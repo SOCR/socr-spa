@@ -1,9 +1,6 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Slider } from "@/components/ui/slider";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PowerParameters, StatisticalTest } from "@/types/power-analysis";
 import { 
   EFFECT_SIZE_MAP, 
@@ -14,6 +11,16 @@ import {
 } from "@/utils/power-calculations";
 import { PowerChart } from "@/components/PowerChart";
 import { InfoTooltip } from "@/components/InfoTooltip";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { TEST_CONFIGURATIONS } from "@/utils/test-configurations";
+import { PowerControls } from "@/components/PowerControls";
+import { AdditionalControls } from "@/components/AdditionalControls";
 
 export function PowerCalculator() {
   const [targetParameter, setTargetParameter] = useState<keyof Omit<PowerParameters, "test">>("power");
@@ -22,14 +29,26 @@ export function PowerCalculator() {
     sampleSize: 30,
     effectSize: 0.5,
     significanceLevel: 0.05,
-    power: 0.8
+    power: 0.8,
+    tailType: "two"
   });
   
   const [calculatedValue, setCalculatedValue] = useState<number | null>(null);
   
   useEffect(() => {
     calculateTargetParameter();
-  }, [params.test, params.sampleSize, params.effectSize, params.significanceLevel, params.power, targetParameter]);
+  }, [params, targetParameter]);
+
+  // Apply default values when test type changes
+  useEffect(() => {
+    const config = TEST_CONFIGURATIONS[params.test];
+    if (config && config.defaultValues) {
+      setParams(prev => ({
+        ...prev,
+        ...config.defaultValues
+      }));
+    }
+  }, [params.test]);
   
   const calculateTargetParameter = () => {
     const paramsCopy = { ...params };
@@ -69,7 +88,7 @@ export function PowerCalculator() {
     setTargetParameter(value as keyof Omit<PowerParameters, "test">);
   };
   
-  const handleParameterChange = (name: keyof Omit<PowerParameters, "test">, value: number) => {
+  const handleParameterChange = (name: keyof Omit<PowerParameters, "test">, value: number | string) => {
     if (name !== targetParameter) {
       setParams(prev => ({
         ...prev,
@@ -77,9 +96,10 @@ export function PowerCalculator() {
       }));
     }
   };
-  
-  const getEffectSizeLabel = () => {
-    return EFFECT_SIZE_MAP[params.test].label;
+
+  const showControl = (controlName: keyof Omit<PowerParameters, "test">): boolean => {
+    const config = TEST_CONFIGURATIONS[params.test];
+    return config?.parameters.includes(controlName) || false;
   };
   
   return (
@@ -122,12 +142,18 @@ export function PowerCalculator() {
                     <SelectItem value="multivariate">Multivariate Methods</SelectItem>
                   </SelectContent>
                 </Select>
+                
+                {TEST_CONFIGURATIONS[params.test] && (
+                  <p className="text-sm text-gray-600">
+                    {TEST_CONFIGURATIONS[params.test].description}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-4">
                 <h3 className="text-lg font-medium">
                   Target Parameter to Calculate
-                  <InfoTooltip content="Select which parameter you want to calculate based on the other four parameters." />
+                  <InfoTooltip content="Select which parameter you want to calculate based on the other parameters." />
                 </h3>
                 <Select value={targetParameter} onValueChange={handleTargetChange}>
                   <SelectTrigger>
@@ -143,116 +169,17 @@ export function PowerCalculator() {
               </div>
 
               <div className="space-y-4">
-                {targetParameter !== "sampleSize" && (
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Sample Size
-                      <InfoTooltip content="The number of observations or participants in your study. Larger samples provide more statistical power." />
-                    </label>
-                    <div className="flex space-x-2">
-                      <Input 
-                        type="number" 
-                        min="2" 
-                        max="1000" 
-                        value={params.sampleSize || ""} 
-                        onChange={(e) => handleParameterChange("sampleSize", Number(e.target.value))}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {targetParameter !== "effectSize" && (
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Effect Size ({getEffectSizeLabel()})
-                      <InfoTooltip content="The magnitude of the effect you're trying to detect. Values can be considered small, medium, or large according to Cohen's conventions." />
-                    </label>
-                    <div className="space-y-2">
-                      <Slider
-                        value={[params.effectSize || 0]}
-                        min={0}
-                        max={1}
-                        step={0.01}
-                        onValueChange={(value) => handleParameterChange("effectSize", value[0])}
-                      />
-                      <div className="flex justify-between text-xs text-muted-foreground px-1">
-                        <span>Small ({EFFECT_SIZE_MAP[params.test].small})</span>
-                        <span>Medium ({EFFECT_SIZE_MAP[params.test].medium})</span>
-                        <span>Large ({EFFECT_SIZE_MAP[params.test].large})</span>
-                      </div>
-                      <Input 
-                        type="number" 
-                        min="0" 
-                        max="2" 
-                        step="0.01" 
-                        value={params.effectSize?.toFixed(2) || ""} 
-                        onChange={(e) => handleParameterChange("effectSize", Number(e.target.value))}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {targetParameter !== "significanceLevel" && (
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Significance Level (α)
-                      <InfoTooltip content="The probability of rejecting the null hypothesis when it is true (Type I error). Commonly set at 0.05 (5%)." />
-                    </label>
-                    <div className="space-y-2">
-                      <Slider
-                        value={[params.significanceLevel || 0]}
-                        min={0.001}
-                        max={0.1}
-                        step={0.001}
-                        onValueChange={(value) => handleParameterChange("significanceLevel", value[0])}
-                      />
-                      <div className="flex justify-between text-xs text-muted-foreground px-1">
-                        <span>0.001</span>
-                        <span>0.05</span>
-                        <span>0.10</span>
-                      </div>
-                      <Input 
-                        type="number" 
-                        min="0.001" 
-                        max="0.1" 
-                        step="0.001" 
-                        value={params.significanceLevel?.toFixed(3) || ""} 
-                        onChange={(e) => handleParameterChange("significanceLevel", Number(e.target.value))}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {targetParameter !== "power" && (
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Power (1-β)
-                      <InfoTooltip content="The probability of detecting a true effect (sensitivity). Equals 1 minus the probability of a Type II error. A value of 0.8 (80%) is commonly used." />
-                    </label>
-                    <div className="space-y-2">
-                      <Slider
-                        value={[params.power || 0]}
-                        min={0.5}
-                        max={0.999}
-                        step={0.001}
-                        onValueChange={(value) => handleParameterChange("power", value[0])}
-                      />
-                      <div className="flex justify-between text-xs text-muted-foreground px-1">
-                        <span>0.5</span>
-                        <span>0.8</span>
-                        <span>0.99</span>
-                      </div>
-                      <Input 
-                        type="number" 
-                        min="0.5" 
-                        max="0.999" 
-                        step="0.001" 
-                        value={params.power?.toFixed(3) || ""} 
-                        onChange={(e) => handleParameterChange("power", Number(e.target.value))}
-                      />
-                    </div>
-                  </div>
-                )}
+                <AdditionalControls 
+                  params={params} 
+                  handleParameterChange={handleParameterChange} 
+                />
+                
+                <PowerControls 
+                  targetParameter={targetParameter}
+                  params={params} 
+                  handleParameterChange={handleParameterChange} 
+                  showControl={showControl}
+                />
               </div>
 
               <div className="bg-muted p-4 rounded-md">
@@ -279,7 +206,7 @@ export function PowerCalculator() {
           <div className="mt-8 prose max-w-full">
             <h3>How to Use This Calculator</h3>
             <p>
-              This statistical power analyzer helps you understand the relationship between the five key components in power analysis:
+              This statistical power analyzer helps you understand the relationship between the key components in power analysis:
             </p>
             <ol>
               <li><strong>Statistical Test:</strong> The specific statistical inference method you will use to analyze your data.</li>
