@@ -1,16 +1,42 @@
-
 import React, { useState, useEffect } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { PowerParameters } from "@/types/power-analysis";
 import { 
-  generatePowerCurve,
-  generateEffectSizeCurve,
+  calculatePower, 
+  calculateSampleSize, 
+  calculateEffectSize, 
+  calculateSignificanceLevel 
 } from "@/utils/power-calculations";
 
 interface PowerChartProps {
   params: PowerParameters;
   targetParameter: keyof Omit<PowerParameters, "test">;
 }
+
+// Implementation of the missing functions
+const generatePowerCurve = (params: PowerParameters, sampleSizes: number[]): any[] => {
+  return sampleSizes.map(n => {
+    const newParams = { ...params, sampleSize: n };
+    newParams.power = null;
+    const calculatedPower = calculatePower(newParams);
+    return {
+      sampleSize: n,
+      power: calculatedPower || 0
+    };
+  });
+};
+
+const generateEffectSizeCurve = (params: PowerParameters, effectSizes: number[]): any[] => {
+  return effectSizes.map(es => {
+    const newParams = { ...params, effectSize: es };
+    newParams.power = null;
+    const calculatedPower = calculatePower(newParams);
+    return {
+      effectSize: es,
+      power: calculatedPower || 0
+    };
+  });
+};
 
 export function PowerChart({ params, targetParameter }: PowerChartProps) {
   const [data, setData] = useState<any[]>([]);

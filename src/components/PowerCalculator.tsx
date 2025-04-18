@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PowerParameters, StatisticalTest } from "@/types/power-analysis";
@@ -88,7 +87,7 @@ export function PowerCalculator() {
     setTargetParameter(value as keyof Omit<PowerParameters, "test">);
   };
   
-  const handleParameterChange = (name: keyof Omit<PowerParameters, "test">, value: number | string) => {
+  const handleParameterChange = (name: keyof PowerParameters, value: number | string) => {
     if (name !== targetParameter) {
       setParams(prev => ({
         ...prev,
