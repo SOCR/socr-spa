@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -109,9 +108,18 @@ export function PowerCalculator() {
                     <SelectItem value="ttest-two-sample">Two-sample t-test</SelectItem>
                     <SelectItem value="ttest-paired">Paired t-test</SelectItem>
                     <SelectItem value="anova">One-way ANOVA</SelectItem>
+                    <SelectItem value="anova-two-way">Two-way ANOVA</SelectItem>
                     <SelectItem value="correlation">Correlation</SelectItem>
-                    <SelectItem value="chi-square">Chi-square test</SelectItem>
-                    <SelectItem value="linear-regression">Linear regression</SelectItem>
+                    <SelectItem value="correlation-difference">Differences between Correlations</SelectItem>
+                    <SelectItem value="proportion-test">Proportion Test (0.50)</SelectItem>
+                    <SelectItem value="sign-test">Sign Test</SelectItem>
+                    <SelectItem value="proportion-difference">Differences between Proportions</SelectItem>
+                    <SelectItem value="chi-square-gof">Chi-square Goodness of Fit</SelectItem>
+                    <SelectItem value="chi-square-contingency">Chi-square Contingency Tables</SelectItem>
+                    <SelectItem value="linear-regression">Simple Linear Regression</SelectItem>
+                    <SelectItem value="multiple-regression">Multiple Regression</SelectItem>
+                    <SelectItem value="set-correlation">Set Correlation</SelectItem>
+                    <SelectItem value="multivariate">Multivariate Methods</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

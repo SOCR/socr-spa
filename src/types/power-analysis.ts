@@ -1,12 +1,21 @@
-
 export type StatisticalTest = 
   | "ttest-one-sample"
   | "ttest-two-sample" 
   | "ttest-paired"
   | "anova"
+  | "anova-two-way"
   | "correlation"
+  | "correlation-difference"
   | "chi-square"
-  | "linear-regression";
+  | "chi-square-gof"
+  | "chi-square-contingency"
+  | "proportion-test"
+  | "proportion-difference"
+  | "sign-test"
+  | "linear-regression"
+  | "multiple-regression"
+  | "set-correlation"
+  | "multivariate";
 
 export type PowerParameters = {
   test: StatisticalTest;
