@@ -4,15 +4,33 @@
 
 This [SOCR project](https://socr.umich.edu/) supports interactive calculation of statistical power, sample size, effect size, and significance level. 
 
-## DIsclaimer
+Table of contents
+=================
+
+<!--ts-->
+   * [Table of contents](#table-of-contents)
+   * [Disclaimer](#iisclaimer)
+   * [Technical Details](#technical-details)
+       1. [Five Key Components](#five-key-components)
+       2. [Relationship Between Parameters](#relationship-between-parameters)
+       3. [Statistical Tests and Effect Size Measures](#statistical-tests-and-effect-size-measures)
+   * [Common Scenarios](#common-scenarios)
+   * [Important Considerations](#important-considerations)
+   * [Resources](#resources)
+<!--te-->
+
+Disclaimer
+==========
 
 This app is not FDA approved. It's intendend for demonstration, education, and research purposes only. Always consult with a statistician for complex study designs.
 
-## Technical Details
+Technical Details
+=================
 
 Power analysis is a statistical approach that explicates the relations between multiple parameters that affect experimental designs. It helps researchers determine the sample size needed to detect an effect of a given size with a specified level of confidence.
 
-### The Five Key Components
+Five Key Components
+===================
 
     Statistical Test: The specific statistical inference method used to analyze your data (e.g., t-test, ANOVA, correlation).
     Sample Size: The number of observations in your study. Larger samples provide more statistical power but require more resources.
@@ -25,7 +43,8 @@ Power analysis is a statistical approach that explicates the relations between m
     Significance Level (α): The probability of Type I error (false positive) - finding an effect that isn't actually there. Commonly set at 0.05.
     Power (1-β): The probability of detecting a true effect (sensitivity). Equals 1 minus the probability of a Type II error (false negative). Power of 0.8 (80%) is often considered acceptable.
 
-### Relationship Between Parameters
+Relationship Between Parameters
+===============================
 
 These five parameters are interconnected. When you specify any four of them, you can calculate the fifth:
 
@@ -34,7 +53,8 @@ These five parameters are interconnected. When you specify any four of them, you
     Stricter significance level (smaller α) → decreases power
     Higher required power → requires larger sample sizes
 
-### Statistical Tests and Effect Size Measures
+Statistical Tests and Effect Size Measures
+==========================================
 
 T-Tests
 
@@ -52,13 +72,15 @@ Linear Regression
 
 Cohen's f² is calculated as R² / (1 - R²) where R² is the coefficient of determination.
 
-### Common Scenarios
+Common Scenarios
+================
 
     Sample Size Determination: When planning a study, researchers often want to know how many participants they need to detect an expected effect size with adequate power.
     Power Calculation: After a study is completed or with a fixed sample size, calculating the power to detect various effect sizes helps interpret results.
     Minimum Detectable Effect: For a fixed sample size and desired power, calculating the smallest effect size that can be reliably detected.
 
-### Important Considerations
+Important Considerations
+========================
 
     Power analyses are based on statistical assumptions that should be carefully evaluated.
     Effect size estimates from previous studies may not be directly applicable to new research contexts.
