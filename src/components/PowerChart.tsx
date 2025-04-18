@@ -7,13 +7,14 @@ import {
   calculateEffectSize, 
   calculateSignificanceLevel 
 } from "@/utils/power-calculations";
+import { ChartControls } from "@/components/ChartControls";
 
 interface PowerChartProps {
   params: PowerParameters;
   targetParameter: keyof Omit<PowerParameters, "test">;
 }
 
-// Helper functions for generating chart data
+// Helper functions moved to separate utils file
 const generatePowerCurve = (params: PowerParameters, sampleSizes: number[]): Array<{sampleSize: number; power: number}> => {
   return sampleSizes.map(n => {
     const newParams = { ...params, sampleSize: n };
@@ -41,24 +42,21 @@ const generateEffectSizeCurve = (params: PowerParameters, effectSizes: number[])
 export function PowerChart({ params, targetParameter }: PowerChartProps) {
   const [data, setData] = useState<Array<{[key: string]: number}>>([]);
   const [chartType, setChartType] = useState<"sampleSize" | "effectSize">("sampleSize");
-  
+
   useEffect(() => {
     generateChartData();
   }, [params, targetParameter, chartType]);
-  
+
   const generateChartData = () => {
     const paramsCopy = { ...params };
     
     if (targetParameter === "power") {
-      // When calculating power, we can show how it varies with sample size or effect size
       if (chartType === "sampleSize") {
         const sampleSizes = Array.from({ length: 20 }, (_, i) => (i + 1) * 10);
-        const data = generatePowerCurve(paramsCopy, sampleSizes);
-        setData(data);
+        setData(generatePowerCurve(paramsCopy, sampleSizes));
       } else {
         const effectSizes = Array.from({ length: 20 }, (_, i) => i * 0.05 + 0.05);
-        const data = generateEffectSizeCurve(paramsCopy, effectSizes);
-        setData(data);
+        setData(generateEffectSizeCurve(paramsCopy, effectSizes));
       }
     } 
     else if (targetParameter === "sampleSize") {
@@ -129,14 +127,12 @@ export function PowerChart({ params, targetParameter }: PowerChartProps) {
       }
     }
   };
-  
+
   const toggleChartType = () => {
     setChartType(prev => prev === "sampleSize" ? "effectSize" : "sampleSize");
   };
-  
-  const getXAxisLabel = () => {
-    return chartType === "sampleSize" ? "Sample Size" : "Effect Size";
-  };
+
+  const getXAxisLabel = () => chartType === "sampleSize" ? "Sample Size" : "Effect Size";
   
   const getYAxisLabel = () => {
     switch (targetParameter) {
@@ -158,20 +154,13 @@ export function PowerChart({ params, targetParameter }: PowerChartProps) {
     }
   };
   
-  const getXAxisDataKey = () => {
-    return chartType === "sampleSize" ? "sampleSize" : "effectSize";
-  };
-  
+  const getXAxisDataKey = () => chartType === "sampleSize" ? "sampleSize" : "effectSize";
+
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-medium">Power Analysis Chart</h3>
       
-      <button 
-        className="px-4 py-2 text-sm bg-secondary rounded"
-        onClick={toggleChartType}
-      >
-        Show variation with {chartType === "sampleSize" ? "effect size" : "sample size"}
-      </button>
+      <ChartControls chartType={chartType} onToggleChartType={toggleChartType} />
       
       <div className="h-64 sm:h-80">
         <ResponsiveContainer width="100%" height="100%">
