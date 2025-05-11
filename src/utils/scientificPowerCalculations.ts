@@ -769,4 +769,4 @@ export const calculateScientificSignificanceLevel = (params: PowerParameters): n
   const tailType = params.tailType || "two";
   
   // Try common alpha levels and see which gives closest power
-  const alphaLevels = [0.001, 0.005, 0.
+  const alphaLevels = [0.001, 0.005,
