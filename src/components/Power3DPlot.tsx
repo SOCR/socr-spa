@@ -44,6 +44,25 @@ export function Power3DPlot({ params }: Power3DPlotProps) {
         let effectSize: number | null = null;
         
         try {
+          // For regression and multivariate tests, we need to adjust calculation parameters
+          // to ensure we get non-zero effect sizes
+          let adjustedParams = { ...newParams };
+          
+          if (['linear-regression', 'multiple-regression', 'set-correlation', 'multivariate'].includes(params.test)) {
+            // For regression tests, ensure we have appropriate parameters
+            if (params.test === 'multiple-regression' || params.test === 'set-correlation') {
+              adjustedParams.predictors = params.predictors || 3;
+            }
+            
+            if (params.test === 'set-correlation' || params.test === 'multivariate') {
+              adjustedParams.responseVariables = params.responseVariables || 2;
+            }
+            
+            if (params.test === 'multivariate') {
+              adjustedParams.groups = params.groups || 2;
+            }
+          }
+          
           // For each power and sample size combination, calculate what effect size would be needed
           if (power && size && params.significanceLevel) {
             // We'll iterate until we find an effect size that gives us approximately the target power
@@ -56,7 +75,7 @@ export function Power3DPlot({ params }: Power3DPlotProps) {
             // Binary search to find the effect size
             while (iterations < maxIterations) {
               const testParams = {
-                ...params,
+                ...adjustedParams,
                 power: null,
                 sampleSize: size,
                 effectSize: mid
@@ -119,7 +138,7 @@ export function Power3DPlot({ params }: Power3DPlotProps) {
         hovertemplate: 
           'Statistical Power (1-β): %{x:.3f}<br>' +
           'Sample Size (n): %{y}<br>' +
-          'Effect Size (d): %{z:.3f}<extra></extra>'
+          'Effect Size: %{z:.3f}<extra></extra>'
       }
     ];
     
@@ -144,7 +163,7 @@ export function Power3DPlot({ params }: Power3DPlotProps) {
         },
         zaxis: { 
           title: {
-            text: 'Effect Size (Cohen\'s d)',
+            text: 'Effect Size',
             font: { size: 12, color: '#7f7f7f' }
           }
         },
