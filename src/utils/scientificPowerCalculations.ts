@@ -1,4 +1,3 @@
-
 /**
  * Scientific Power Analysis Calculation Library
  * 
@@ -12,6 +11,35 @@
  */
 
 import { PowerParameters } from "@/types/power-analysis";
+
+// Implementation of gamma function (since Math.gamma doesn't exist)
+const gamma = (z: number): number => {
+  // Lanczos approximation for the gamma function
+  // Implementation based on numerical recipes
+  const p = [
+    676.5203681218851,
+    -1259.1392167224028,
+    771.32342877765313,
+    -176.61502916214059,
+    12.507343278686905,
+    -0.13857109526572012,
+    9.9843695780195716e-6,
+    1.5056327351493116e-7
+  ];
+  
+  if (z < 0.5) {
+    // Reflection formula
+    return Math.PI / (Math.sin(Math.PI * z) * gamma(1 - z));
+  } else {
+    z -= 1;
+    let x = 0.99999999999980993;
+    for (let i = 0; i < p.length; i++) {
+      x += p[i] / (z + i + 1);
+    }
+    const t = z + p.length - 0.5;
+    return Math.sqrt(2 * Math.PI) * Math.pow(t, z + 0.5) * Math.exp(-t) * x;
+  }
+};
 
 // Standard normal distribution function (cumulative distribution function)
 const normCdf = (z: number): number => {
@@ -95,9 +123,9 @@ const tCdf = (t: number, df: number): number => {
     Math.log(x) * a + 
     Math.log(1 - x) * b - 
     Math.log(a + b) + 
-    Math.log(Math.gamma(a + b)) - 
-    Math.log(Math.gamma(a)) - 
-    Math.log(Math.gamma(b))
+    Math.log(gamma(a + b)) - 
+    Math.log(gamma(a)) - 
+    Math.log(gamma(b))
   );
   
   return t > 0 ? 1 - 0.5 * beta : 0.5 * beta;
@@ -741,33 +769,4 @@ export const calculateScientificSignificanceLevel = (params: PowerParameters): n
   const tailType = params.tailType || "two";
   
   // Try common alpha levels and see which gives closest power
-  const alphaLevels = [0.001, 0.005, 0.01, 0.02, 0.05, 0.1];
-  let bestAlpha = 0.05; // Default
-  let minDiff = 1.0;
-  
-  // Create a temporary params object for power calculations
-  const tempParams = { ...params };
-  
-  for (const alpha of alphaLevels) {
-    tempParams.significanceLevel = alpha;
-    const calculatedPower = calculateScientificPower(tempParams);
-    
-    if (calculatedPower !== null) {
-      const diff = Math.abs(calculatedPower - desiredPower);
-      if (diff < minDiff) {
-        minDiff = diff;
-        bestAlpha = alpha;
-      }
-    }
-  }
-  
-  return bestAlpha;
-};
-
-// Export all functions for use in the application
-export {
-  calculateScientificPower as calculatePower,
-  calculateScientificSampleSize as calculateSampleSize,
-  calculateScientificEffectSize as calculateEffectSize,
-  calculateScientificSignificanceLevel as calculateSignificanceLevel
-};
+  const alphaLevels = [0.001, 0.005, 0.
