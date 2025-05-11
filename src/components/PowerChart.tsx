@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { PowerParameters } from "@/types/power-analysis";
 import { 
-  calculatePower, 
-  calculateSampleSize, 
-  calculateEffectSize
+  calculateScientificPower, 
+  calculateScientificSampleSize, 
+  calculateScientificEffectSize
 } from "@/utils/scientificPowerCalculations";
 import { ChartControls } from "@/components/ChartControls";
 
@@ -19,7 +18,7 @@ const generatePowerCurve = (params: PowerParameters, sampleSizes: number[]): Arr
   return sampleSizes.map(n => {
     const newParams = { ...params, sampleSize: n };
     newParams.power = null;
-    const calculatedPower = calculatePower(newParams);
+    const calculatedPower = calculateScientificPower(newParams);
     return {
       sampleSize: n,
       power: calculatedPower || 0
@@ -31,7 +30,7 @@ const generateEffectSizeCurve = (params: PowerParameters, effectSizes: number[])
   return effectSizes.map(es => {
     const newParams = { ...params, effectSize: es };
     newParams.power = null;
-    const calculatedPower = calculatePower(newParams);
+    const calculatedPower = calculateScientificPower(newParams);
     return {
       effectSize: es,
       power: calculatedPower || 0
@@ -67,7 +66,7 @@ export function PowerChart({ params, targetParameter }: PowerChartProps) {
         const data = effectSizes.map(es => {
           const newParams = { ...paramsCopy, effectSize: es };
           newParams.sampleSize = null;
-          const calculatedSampleSize = calculateSampleSize(newParams);
+          const calculatedSampleSize = calculateScientificSampleSize(newParams);
           return {
             effectSize: es,
             sampleSize: calculatedSampleSize || 0
@@ -80,7 +79,7 @@ export function PowerChart({ params, targetParameter }: PowerChartProps) {
         const data = powers.map(power => {
           const newParams = { ...paramsCopy, power: power };
           newParams.sampleSize = null;
-          const calculatedSampleSize = calculateSampleSize(newParams);
+          const calculatedSampleSize = calculateScientificSampleSize(newParams);
           return {
             power: power,
             sampleSize: calculatedSampleSize || 0
@@ -96,7 +95,7 @@ export function PowerChart({ params, targetParameter }: PowerChartProps) {
         const data = sampleSizes.map(n => {
           const newParams = { ...paramsCopy, sampleSize: n };
           newParams.effectSize = null;
-          const calculatedEffectSize = calculateEffectSize(newParams);
+          const calculatedEffectSize = calculateScientificEffectSize(newParams);
           return {
             sampleSize: n,
             effectSize: calculatedEffectSize || 0
@@ -109,7 +108,7 @@ export function PowerChart({ params, targetParameter }: PowerChartProps) {
         const data = powers.map(power => {
           const newParams = { ...paramsCopy, power: power };
           newParams.effectSize = null;
-          const calculatedEffectSize = calculateEffectSize(newParams);
+          const calculatedEffectSize = calculateScientificEffectSize(newParams);
           return {
             power: power,
             effectSize: calculatedEffectSize || 0

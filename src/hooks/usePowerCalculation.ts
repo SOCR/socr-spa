@@ -2,10 +2,10 @@
 import { useState, useEffect } from "react";
 import { PowerParameters } from "@/types/power-analysis";
 import { 
-  calculatePower, 
-  calculateSampleSize, 
-  calculateEffectSize, 
-  calculateSignificanceLevel 
+  calculateScientificPower, 
+  calculateScientificSampleSize, 
+  calculateScientificEffectSize, 
+  calculateScientificSignificanceLevel 
 } from "@/utils/scientificPowerCalculations";
 
 export const usePowerCalculation = (
@@ -22,16 +22,16 @@ export const usePowerCalculation = (
     
     switch (targetParameter) {
       case "power":
-        result = calculatePower(paramsCopy);
+        result = calculateScientificPower(paramsCopy);
         break;
       case "sampleSize":
-        result = calculateSampleSize(paramsCopy);
+        result = calculateScientificSampleSize(paramsCopy);
         break;
       case "effectSize":
-        result = calculateEffectSize(paramsCopy);
+        result = calculateScientificEffectSize(paramsCopy);
         break;
       case "significanceLevel":
-        result = calculateSignificanceLevel(paramsCopy);
+        result = calculateScientificSignificanceLevel(paramsCopy);
         break;
     }
     
