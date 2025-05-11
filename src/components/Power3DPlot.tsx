@@ -4,7 +4,7 @@ import Plot from 'react-plotly.js';
 import { PowerParameters } from '@/types/power-analysis';
 import { calculateScientificPower } from '@/utils/powerAnalysis';
 import { Button } from '@/components/ui/button';
-import { Maximize2 } from 'lucide-react';
+import { Maximize2, Minimize2 } from 'lucide-react';
 
 interface Power3DPlotProps {
   params: PowerParameters;
@@ -17,7 +17,7 @@ export function Power3DPlot({ params }: Power3DPlotProps) {
 
   useEffect(() => {
     generatePlotData();
-  }, [params]);
+  }, [params, isFullScreen]);
 
   const generatePlotData = () => {
     // Create ranges for power and sample size
@@ -117,7 +117,7 @@ export function Power3DPlot({ params }: Power3DPlotProps) {
           }
         },
         hovertemplate: 
-          'Power (1-β): %{x:.3f}<br>' +
+          'Statistical Power (1-β): %{x:.3f}<br>' +
           'Sample Size (n): %{y}<br>' +
           'Effect Size (d): %{z:.3f}<extra></extra>'
       }
@@ -125,12 +125,29 @@ export function Power3DPlot({ params }: Power3DPlotProps) {
     
     setPlotData(plotData);
     
+    const fullScreenHeight = isFullScreen ? Math.max(window.innerHeight * 0.9, 800) : 400;
+    
     const layout = {
       title: '3D Power Analysis Surface',
       scene: {
-        xaxis: { title: 'Statistical Power (1-β)' },
-        yaxis: { title: 'Sample Size (n)' },
-        zaxis: { title: 'Effect Size (Cohen\'s d)' },
+        xaxis: { 
+          title: {
+            text: 'Statistical Power (1-β)',
+            font: { size: 12, color: '#7f7f7f' }
+          }
+        },
+        yaxis: { 
+          title: {
+            text: 'Sample Size (n)',
+            font: { size: 12, color: '#7f7f7f' }
+          }
+        },
+        zaxis: { 
+          title: {
+            text: 'Effect Size (Cohen\'s d)',
+            font: { size: 12, color: '#7f7f7f' }
+          }
+        },
         camera: {
           eye: { x: 1.5, y: 1.5, z: 1 }
         }
@@ -143,7 +160,7 @@ export function Power3DPlot({ params }: Power3DPlotProps) {
         pad: 0
       },
       autosize: true,
-      height: isFullScreen ? window.innerHeight * 0.9 : 400
+      height: fullScreenHeight
     };
     
     setLayout(layout);
@@ -151,13 +168,10 @@ export function Power3DPlot({ params }: Power3DPlotProps) {
 
   const toggleFullScreen = () => {
     setIsFullScreen(!isFullScreen);
-    setTimeout(() => {
-      generatePlotData(); // Regenerate plot with new dimensions
-    }, 100);
   };
 
   return (
-    <div className={`w-full ${isFullScreen ? 'fixed top-0 left-0 z-50 h-screen bg-white p-4' : 'relative h-full border border-gray-200 rounded-md bg-white'}`}>
+    <div className={`w-full ${isFullScreen ? 'fixed top-0 left-0 z-50 bg-white p-4' : 'relative h-full border border-gray-200 rounded-md bg-white'}`} style={{ height: isFullScreen ? Math.max(window.innerHeight * 0.95, 800) : '100%' }}>
       <div className="absolute top-2 right-2 z-10">
         <Button 
           variant="outline" 
@@ -165,7 +179,7 @@ export function Power3DPlot({ params }: Power3DPlotProps) {
           onClick={toggleFullScreen}
           className="bg-white hover:bg-gray-100"
         >
-          <Maximize2 className="h-4 w-4" />
+          {isFullScreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
           <span className="ml-1">{isFullScreen ? 'Exit Fullscreen' : 'Fullscreen'}</span>
         </Button>
       </div>

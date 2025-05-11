@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { PowerParameters } from "@/types/power-analysis";
@@ -223,6 +222,17 @@ export function PowerChart({ params, targetParameter }: PowerChartProps) {
         <div 
           className={`${is2DFullScreen ? 'fixed top-0 left-0 z-50 w-screen h-screen bg-white p-8' : 'h-64 sm:h-80 border rounded-md bg-white p-4'}`}
         >
+          {is2DFullScreen && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={toggle2DFullScreen}
+              className="absolute top-4 right-4 bg-white hover:bg-gray-100 z-50"
+            >
+              <Minimize2 className="h-4 w-4 mr-1" />
+              Exit Fullscreen
+            </Button>
+          )}
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={data}
