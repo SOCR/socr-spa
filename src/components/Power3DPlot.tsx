@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react';
 import Plot from 'react-plotly.js';
 import { PowerParameters } from '@/types/power-analysis';
 import { calculateScientificPower } from '@/utils/powerAnalysis';
+import { Button } from '@/components/ui/button';
+import { Maximize2 } from 'lucide-react';
 
 interface Power3DPlotProps {
   params: PowerParameters;
@@ -11,6 +13,7 @@ interface Power3DPlotProps {
 export function Power3DPlot({ params }: Power3DPlotProps) {
   const [plotData, setPlotData] = useState<any[]>([]);
   const [layout, setLayout] = useState<any>({});
+  const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
 
   useEffect(() => {
     generatePlotData();
@@ -114,9 +117,9 @@ export function Power3DPlot({ params }: Power3DPlotProps) {
           }
         },
         hovertemplate: 
-          'Power: %{x:.3f}<br>' +
-          'Sample Size: %{y}<br>' +
-          'Effect Size: %{z:.3f}<extra></extra>'
+          'Power (1-β): %{x:.3f}<br>' +
+          'Sample Size (n): %{y}<br>' +
+          'Effect Size (d): %{z:.3f}<extra></extra>'
       }
     ];
     
@@ -140,14 +143,32 @@ export function Power3DPlot({ params }: Power3DPlotProps) {
         pad: 0
       },
       autosize: true,
-      height: 400
+      height: isFullScreen ? window.innerHeight * 0.9 : 400
     };
     
     setLayout(layout);
   };
 
+  const toggleFullScreen = () => {
+    setIsFullScreen(!isFullScreen);
+    setTimeout(() => {
+      generatePlotData(); // Regenerate plot with new dimensions
+    }, 100);
+  };
+
   return (
-    <div className="w-full h-full border border-gray-200 rounded-md bg-white">
+    <div className={`w-full ${isFullScreen ? 'fixed top-0 left-0 z-50 h-screen bg-white p-4' : 'relative h-full border border-gray-200 rounded-md bg-white'}`}>
+      <div className="absolute top-2 right-2 z-10">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={toggleFullScreen}
+          className="bg-white hover:bg-gray-100"
+        >
+          <Maximize2 className="h-4 w-4" />
+          <span className="ml-1">{isFullScreen ? 'Exit Fullscreen' : 'Fullscreen'}</span>
+        </Button>
+      </div>
       <Plot
         data={plotData}
         layout={layout}

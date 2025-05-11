@@ -9,6 +9,8 @@ import {
 } from "@/utils/powerAnalysis";
 import { ChartControls } from "@/components/ChartControls";
 import { Power3DPlot } from "@/components/Power3DPlot";
+import { Button } from "@/components/ui/button";
+import { Maximize2, Minimize2 } from "lucide-react";
 
 interface PowerChartProps {
   params: PowerParameters;
@@ -43,6 +45,7 @@ const generateEffectSizeCurve = (params: PowerParameters, effectSizes: number[])
 export function PowerChart({ params, targetParameter }: PowerChartProps) {
   const [data, setData] = useState<Array<{[key: string]: number}>>([]);
   const [chartType, setChartType] = useState<"sampleSize" | "effectSize">("sampleSize");
+  const [is2DFullScreen, setIs2DFullScreen] = useState<boolean>(false);
 
   useEffect(() => {
     console.log("Generating chart data with:", { params, targetParameter, chartType });
@@ -160,17 +163,17 @@ export function PowerChart({ params, targetParameter }: PowerChartProps) {
 
   const getXAxisLabel = () => {
     if (chartType === "sampleSize") {
-      return targetParameter === "sampleSize" ? "Power (1-β)" : "Sample Size";
+      return targetParameter === "sampleSize" ? "Power (1-β)" : "Sample Size (n)";
     } else {
-      return "Effect Size";
+      return "Effect Size (Cohen's d)";
     }
   };
   
   const getYAxisLabel = () => {
     switch (targetParameter) {
-      case "power": return "Power (1-β)";
-      case "sampleSize": return "Sample Size";
-      case "effectSize": return "Effect Size";
+      case "power": return "Statistical Power (1-β)";
+      case "sampleSize": return "Sample Size (n)";
+      case "effectSize": return "Effect Size (Cohen's d)";
       case "significanceLevel": return "Significance Level (α)";
       default: return "";
     }
@@ -194,15 +197,32 @@ export function PowerChart({ params, targetParameter }: PowerChartProps) {
     }
   };
 
+  const toggle2DFullScreen = () => {
+    setIs2DFullScreen(!is2DFullScreen);
+  };
+
   return (
     <div className="space-y-6">
+      {/* 2D Chart */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-medium">Power Analysis Chart (2D)</h3>
-          <ChartControls chartType={chartType} onToggleChartType={toggleChartType} />
+          <div className="flex items-center gap-2">
+            <ChartControls chartType={chartType} onToggleChartType={toggleChartType} />
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={toggle2DFullScreen}
+            >
+              {is2DFullScreen ? <Minimize2 className="h-4 w-4 mr-1" /> : <Maximize2 className="h-4 w-4 mr-1" />}
+              {is2DFullScreen ? "Exit Fullscreen" : "Fullscreen"}
+            </Button>
+          </div>
         </div>
         
-        <div className="h-64 sm:h-80 border rounded-md bg-white p-4">
+        <div 
+          className={`${is2DFullScreen ? 'fixed top-0 left-0 z-50 w-screen h-screen bg-white p-8' : 'h-64 sm:h-80 border rounded-md bg-white p-4'}`}
+        >
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={data}
@@ -234,6 +254,7 @@ export function PowerChart({ params, targetParameter }: PowerChartProps) {
         </div>
       </div>
       
+      {/* 3D Chart */}
       <div className="space-y-4">
         <h3 className="text-lg font-medium">3D Power Analysis Surface</h3>
         <div className="h-80 border rounded-md bg-white p-2">
