@@ -1,12 +1,12 @@
 
 import { useState, useEffect } from "react";
-import { PowerParameters, StatisticalTest } from "@/types/power-analysis";
+import { PowerParameters } from "@/types/power-analysis";
 import { 
   calculatePower, 
   calculateSampleSize, 
   calculateEffectSize, 
   calculateSignificanceLevel 
-} from "@/utils/power-calculations";
+} from "@/utils/scientificPowerCalculations";
 
 export const usePowerCalculation = (
   params: PowerParameters,

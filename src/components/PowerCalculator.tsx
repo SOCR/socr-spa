@@ -11,6 +11,7 @@ import { AdditionalControls } from "@/components/AdditionalControls";
 import { usePowerCalculation } from "@/hooks/usePowerCalculation";
 import { CalculatedResult } from "@/components/CalculatedResult";
 import { PowerInstructions } from "@/components/PowerInstructions";
+import { TestFormulas } from "@/components/TestFormulas";
 
 export function PowerCalculator() {
   const [targetParameter, setTargetParameter] = useState<keyof Omit<PowerParameters, "test">>("power");
@@ -49,6 +50,7 @@ export function PowerCalculator() {
 
   const handleParameterChange = (name: keyof PowerParameters, value: number | string) => {
     if (name !== targetParameter) {
+      console.log(`Parameter changed: ${name} = ${value}`);
       setParams(prev => ({
         ...prev,
         [name]: value
@@ -142,6 +144,8 @@ export function PowerCalculator() {
           </div>
 
           <PowerInstructions />
+          
+          <TestFormulas test={params.test} />
         </CardContent>
       </Card>
     </div>

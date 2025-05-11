@@ -89,11 +89,14 @@ export function PowerControls({
           </label>
           <div className="space-y-2">
             <Slider
-              value={[params.significanceLevel || 0]}
+              value={[params.significanceLevel || 0.05]}
               min={0.001}
               max={0.1}
               step={0.001}
-              onValueChange={(value) => handleParameterChange("significanceLevel", value[0])}
+              onValueChange={(value) => {
+                console.log("Significance level changed:", value[0]);
+                handleParameterChange("significanceLevel", value[0]);
+              }}
             />
             <div className="flex justify-between text-xs text-muted-foreground px-1">
               <span>0.001</span>
