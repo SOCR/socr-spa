@@ -15,27 +15,32 @@ export const usePowerCalculation = (
   const [calculatedValue, setCalculatedValue] = useState<number | null>(null);
 
   useEffect(() => {
-    const paramsCopy = { ...params };
-    (paramsCopy[targetParameter] as any) = null;
-    
-    let result: number | null = null;
-    
-    switch (targetParameter) {
-      case "power":
-        result = calculateScientificPower(paramsCopy);
-        break;
-      case "sampleSize":
-        result = calculateScientificSampleSize(paramsCopy);
-        break;
-      case "effectSize":
-        result = calculateScientificEffectSize(paramsCopy);
-        break;
-      case "significanceLevel":
-        result = calculateScientificSignificanceLevel(paramsCopy);
-        break;
+    try {
+      const paramsCopy = { ...params };
+      (paramsCopy[targetParameter] as any) = null;
+      
+      let result: number | null = null;
+      
+      switch (targetParameter) {
+        case "power":
+          result = calculateScientificPower(paramsCopy);
+          break;
+        case "sampleSize":
+          result = calculateScientificSampleSize(paramsCopy);
+          break;
+        case "effectSize":
+          result = calculateScientificEffectSize(paramsCopy);
+          break;
+        case "significanceLevel":
+          result = calculateScientificSignificanceLevel(paramsCopy);
+          break;
+      }
+      
+      setCalculatedValue(result);
+    } catch (error) {
+      console.error("Error in power calculation:", error);
+      setCalculatedValue(null);
     }
-    
-    setCalculatedValue(result);
   }, [params, targetParameter]);
 
   return calculatedValue;

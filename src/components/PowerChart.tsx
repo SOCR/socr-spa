@@ -7,6 +7,7 @@ import {
   calculateScientificEffectSize
 } from "@/utils/scientificPowerCalculations";
 import { ChartControls } from "@/components/ChartControls";
+import { Power3DPlot } from "@/components/Power3DPlot";
 
 interface PowerChartProps {
   params: PowerParameters;
@@ -41,6 +42,7 @@ const generateEffectSizeCurve = (params: PowerParameters, effectSizes: number[])
 export function PowerChart({ params, targetParameter }: PowerChartProps) {
   const [data, setData] = useState<Array<{[key: string]: number}>>([]);
   const [chartType, setChartType] = useState<"sampleSize" | "effectSize">("sampleSize");
+  const [showMode, setShowMode] = useState<"2d" | "3d">("2d");
 
   useEffect(() => {
     console.log("Generating chart data with:", { params, targetParameter, chartType });
@@ -156,6 +158,10 @@ export function PowerChart({ params, targetParameter }: PowerChartProps) {
     setChartType(prev => prev === "sampleSize" ? "effectSize" : "sampleSize");
   };
 
+  const toggleViewMode = () => {
+    setShowMode(prev => prev === "2d" ? "3d" : "2d");
+  };
+
   const getXAxisLabel = () => {
     if (chartType === "sampleSize") {
       return targetParameter === "sampleSize" ? "Power (1-β)" : "Sample Size";
@@ -194,39 +200,54 @@ export function PowerChart({ params, targetParameter }: PowerChartProps) {
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-medium">Power Analysis Chart</h3>
-      
-      <ChartControls chartType={chartType} onToggleChartType={toggleChartType} />
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-medium">Power Analysis Chart</h3>
+        <div className="flex space-x-2">
+          <ChartControls chartType={chartType} onToggleChartType={toggleChartType} />
+          <button 
+            className="px-4 py-2 text-sm bg-secondary rounded" 
+            onClick={toggleViewMode}
+          >
+            Switch to {showMode === "2d" ? "3D" : "2D"} View
+          </button>
+        </div>
+      </div>
       
       <div className="h-64 sm:h-80">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart
-            data={data}
-            margin={{
-              top: 5,
-              right: 30,
-              left: 20,
-              bottom: 5,
-            }}
-          >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis 
-              dataKey={getXAxisDataKey()} 
-              label={{ value: getXAxisLabel(), position: 'insideBottomRight', offset: -5 }} 
-            />
-            <YAxis 
-              label={{ value: getYAxisLabel(), angle: -90, position: 'insideLeft' }} 
-            />
-            <Tooltip formatter={(value: number) => value.toFixed(3)} />
-            <Legend />
-            <Line 
-              type="monotone" 
-              dataKey={getLineDataKey()} 
-              stroke="#8884d8" 
-              activeDot={{ r: 8 }} 
-            />
-          </LineChart>
-        </ResponsiveContainer>
+        {showMode === "2d" ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart
+              data={data}
+              margin={{
+                top: 5,
+                right: 30,
+                left: 20,
+                bottom: 5,
+              }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis 
+                dataKey={getXAxisDataKey()} 
+                label={{ value: getXAxisLabel(), position: 'insideBottomRight', offset: -5 }} 
+              />
+              <YAxis 
+                label={{ value: getYAxisLabel(), angle: -90, position: 'insideLeft' }} 
+              />
+              <Tooltip formatter={(value: number) => value.toFixed(3)} />
+              <Legend />
+              <Line 
+                type="monotone" 
+                dataKey={getLineDataKey()} 
+                stroke="#8884d8" 
+                activeDot={{ r: 8 }} 
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="h-full">
+            <Power3DPlot params={params} />
+          </div>
+        )}
       </div>
     </div>
   );
