@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import Plot from 'react-plotly.js';
 import { PowerParameters } from '@/types/power-analysis';
@@ -122,7 +123,7 @@ export function Power3DPlot({ params }: Power3DPlotProps) {
     setPlotData(plotData);
     
     const layout = {
-      title: 'Power Analysis 3D Visualization',
+      title: '3D Power Analysis Surface',
       scene: {
         xaxis: { title: 'Statistical Power (1-β)' },
         yaxis: { title: 'Sample Size (n)' },

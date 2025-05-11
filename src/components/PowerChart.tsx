@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { PowerParameters } from "@/types/power-analysis";
@@ -42,7 +43,6 @@ const generateEffectSizeCurve = (params: PowerParameters, effectSizes: number[])
 export function PowerChart({ params, targetParameter }: PowerChartProps) {
   const [data, setData] = useState<Array<{[key: string]: number}>>([]);
   const [chartType, setChartType] = useState<"sampleSize" | "effectSize">("sampleSize");
-  const [showMode, setShowMode] = useState<"2d" | "3d">("2d");
 
   useEffect(() => {
     console.log("Generating chart data with:", { params, targetParameter, chartType });
@@ -158,10 +158,6 @@ export function PowerChart({ params, targetParameter }: PowerChartProps) {
     setChartType(prev => prev === "sampleSize" ? "effectSize" : "sampleSize");
   };
 
-  const toggleViewMode = () => {
-    setShowMode(prev => prev === "2d" ? "3d" : "2d");
-  };
-
   const getXAxisLabel = () => {
     if (chartType === "sampleSize") {
       return targetParameter === "sampleSize" ? "Power (1-β)" : "Sample Size";
@@ -199,22 +195,14 @@ export function PowerChart({ params, targetParameter }: PowerChartProps) {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium">Power Analysis Chart</h3>
-        <div className="flex space-x-2">
+    <div className="space-y-6">
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-medium">Power Analysis Chart (2D)</h3>
           <ChartControls chartType={chartType} onToggleChartType={toggleChartType} />
-          <button 
-            className="px-4 py-2 text-sm bg-secondary rounded" 
-            onClick={toggleViewMode}
-          >
-            Switch to {showMode === "2d" ? "3D" : "2D"} View
-          </button>
         </div>
-      </div>
-      
-      <div className="h-64 sm:h-80">
-        {showMode === "2d" ? (
+        
+        <div className="h-64 sm:h-80 border rounded-md bg-white p-4">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={data}
@@ -243,11 +231,18 @@ export function PowerChart({ params, targetParameter }: PowerChartProps) {
               />
             </LineChart>
           </ResponsiveContainer>
-        ) : (
-          <div className="h-full">
-            <Power3DPlot params={params} />
-          </div>
-        )}
+        </div>
+      </div>
+      
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium">3D Power Analysis Surface</h3>
+        <div className="h-80 border rounded-md bg-white p-2">
+          <Power3DPlot params={params} />
+        </div>
+        <p className="text-sm text-gray-500">
+          This 3D surface shows the relationship between statistical power (X-axis), 
+          sample size (Y-axis), and effect size (Z-axis/height).
+        </p>
       </div>
     </div>
   );

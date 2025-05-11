@@ -6,7 +6,7 @@ import {
   calculateScientificSampleSize, 
   calculateScientificEffectSize, 
   calculateScientificSignificanceLevel 
-} from "@/utils/scientificPowerCalculations";
+} from "@/utils/powerAnalysis";
 
 export const usePowerCalculation = (
   params: PowerParameters,
