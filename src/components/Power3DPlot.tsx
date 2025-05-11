@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import Plot from 'react-plotly.js';
 import { PowerParameters } from '@/types/power-analysis';
-import { calculateScientificPower } from '@/utils/scientificPowerCalculations';
+import { calculateScientificPower } from '@/utils/powerAnalysis';
 
 interface Power3DPlotProps {
   params: PowerParameters;

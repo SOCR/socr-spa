@@ -6,7 +6,7 @@ import {
   calculateScientificPower, 
   calculateScientificSampleSize, 
   calculateScientificEffectSize
-} from "@/utils/scientificPowerCalculations";
+} from "@/utils/powerAnalysis";
 import { ChartControls } from "@/components/ChartControls";
 import { Power3DPlot } from "@/components/Power3DPlot";
 
