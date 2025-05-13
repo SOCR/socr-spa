@@ -1,4 +1,3 @@
-
 /**
  * Power calculation functions for specific statistical tests
  */
@@ -193,4 +192,29 @@ export const powerMultipleRegression = (
 ): number => {
   // Use the linear regression function with multiple predictors
   return powerLinearRegression(sampleSize, effectSize, alpha, predictors);
+};
+
+// Power calculation for SEM (Structural Equation Modeling)
+export const powerSEM = (
+  sampleSize: number,
+  effectSize: number, // Using RMSEA as effect size
+  alpha: number,
+  df: number = 10
+): number => {
+  // Calculate non-centrality parameter lambda based on effect size (RMSEA), sample size, and df
+  // Lambda = (N-1) * df * effectSize^2
+  const ncp = (sampleSize - 1) * df * Math.pow(effectSize, 2);
+  
+  // Critical chi-square value for alpha level and df
+  const criticalChi = df * (1 + 2 / (9 * df) - 2 / (9 * df) * Math.pow(normInv(1 - alpha), 1.5));
+  
+  // Calculate power (probability of rejecting H0 when H1 is true)
+  // Using chi-square distribution with df degrees of freedom and ncp as non-centrality parameter
+  // This is an approximation of the power for SEM
+  const powerValue = 1 - normCdf(
+    (Math.sqrt(2 * criticalChi) - Math.sqrt(2 * df - 1 + ncp / df)) / 
+    Math.sqrt(1 + ncp / (2 * df))
+  );
+  
+  return Math.max(0.001, Math.min(0.999, powerValue));
 };

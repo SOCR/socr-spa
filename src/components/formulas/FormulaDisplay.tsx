@@ -19,6 +19,7 @@ import {
   SetCorrelationFormula,
   MultivariateFormula
 } from './testFormulas';
+import { SEMFormula } from './SEMFormula';
 
 interface FormulaDisplayProps {
   test: StatisticalTest;
@@ -58,6 +59,8 @@ export function FormulaDisplay({ test }: FormulaDisplayProps) {
       return <SetCorrelationFormula />;
     case 'multivariate':
       return <MultivariateFormula />;
+    case 'sem':
+      return <SEMFormula />;
     default:
       return null;
   }

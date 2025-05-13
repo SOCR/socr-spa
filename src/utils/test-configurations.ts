@@ -1,4 +1,3 @@
-
 import { TestConfigMap } from "@/types/power-analysis";
 
 export const TEST_CONFIGURATIONS: TestConfigMap = {
@@ -175,6 +174,7 @@ export const TEST_CONFIGURATIONS: TestConfigMap = {
       responseVariables: 2
     }
   },
+  
   "multivariate": {
     name: "Multivariate Methods",
     description: "Tests effects in multivariate designs",
@@ -186,6 +186,18 @@ export const TEST_CONFIGURATIONS: TestConfigMap = {
     defaultValues: {
       groups: 2,
       responseVariables: 2
+    }
+  },
+  
+  "sem": {
+    name: "Structural Equation Modeling (SEM)",
+    description: "Tests relationships between latent variables in a structural model",
+    parameters: ["sampleSize", "effectSize", "significanceLevel", "power"],
+    additionalControls: {
+      degreesOfFreedom: true
+    },
+    defaultValues: {
+      degreesOfFreedom: 10
     }
   }
 };

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import Plot from 'react-plotly.js';
 import { PowerParameters } from '@/types/power-analysis';
@@ -44,11 +43,11 @@ export function Power3DPlot({ params }: Power3DPlotProps) {
         let effectSize: number | null = null;
         
         try {
-          // For regression and multivariate tests, we need to adjust calculation parameters
+          // For regression, multivariate, and SEM tests, we need to adjust calculation parameters
           // to ensure we get non-zero effect sizes
           let adjustedParams = { ...newParams };
           
-          if (['linear-regression', 'multiple-regression', 'set-correlation', 'multivariate'].includes(params.test)) {
+          if (['linear-regression', 'multiple-regression', 'set-correlation', 'multivariate', 'sem'].includes(params.test)) {
             // For regression tests, ensure we have appropriate parameters
             if (params.test === 'multiple-regression' || params.test === 'set-correlation') {
               adjustedParams.predictors = params.predictors || 3;
@@ -60,6 +59,10 @@ export function Power3DPlot({ params }: Power3DPlotProps) {
             
             if (params.test === 'multivariate') {
               adjustedParams.groups = params.groups || 2;
+            }
+            
+            if (params.test === 'sem') {
+              adjustedParams.degreesOfFreedom = params.degreesOfFreedom || 10;
             }
           }
           

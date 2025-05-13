@@ -21,7 +21,8 @@ export function PowerCalculator() {
     effectSize: 0.5,
     significanceLevel: 0.05,
     power: 0.8,
-    tailType: "two"
+    tailType: "two",
+    degreesOfFreedom: 10 // Added default for SEM
   });
 
   const calculatedValue = usePowerCalculation(params, targetParameter);

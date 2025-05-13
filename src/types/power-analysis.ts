@@ -1,4 +1,3 @@
-
 export type StatisticalTest = 
   "ttest-one-sample" | 
   "ttest-two-sample" | 
@@ -15,7 +14,8 @@ export type StatisticalTest =
   "linear-regression" |
   "multiple-regression" |
   "set-correlation" |
-  "multivariate";
+  "multivariate" |
+  "sem";  // Added SEM test type
 
 export interface PowerParameters {
   test: StatisticalTest;
@@ -29,6 +29,7 @@ export interface PowerParameters {
   correlation?: number | null;
   predictors?: number | null;
   responseVariables?: number | null;
+  degreesOfFreedom?: number | null; // Added for SEM
 }
 
 export interface TestConfig {
@@ -42,6 +43,7 @@ export interface TestConfig {
     correlation?: boolean;
     predictors?: boolean;
     responseVariables?: boolean;
+    degreesOfFreedom?: boolean;
   };
   defaultValues?: Partial<PowerParameters>;
 }

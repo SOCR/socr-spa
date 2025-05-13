@@ -1,4 +1,3 @@
-
 import { PowerParameters } from "@/types/power-analysis";
 
 export const EFFECT_SIZE_MAP = {
@@ -97,6 +96,12 @@ export const EFFECT_SIZE_MAP = {
     medium: 0.25,
     large: 0.4,
     label: "Cohen's f"
+  },
+  "sem": {
+    small: 0.1,
+    medium: 0.3,
+    large: 0.5,
+    label: "RMSEA"  // Root Mean Square Error of Approximation
   },
 };
 
@@ -210,6 +215,11 @@ export const calculatePower = (params: PowerParameters): number | null => {
       const mvGroups = params.groups || 2;
       const mvRespVars = params.responseVariables || 2;
       power = 1 - Math.exp(-(es * (n - mvGroups - mvRespVars + 1) / (6 + 0.3 * mvRespVars)));
+      break;
+    case "sem":
+      // Structural Equation Modeling
+      const df = params.degreesOfFreedom || 10;
+      power = 1 - Math.exp(-(es * Math.sqrt(n) / Math.sqrt(2 + 0.1 * df)));
       break;
   }
   
@@ -333,6 +343,11 @@ export const calculateSampleSize = (params: PowerParameters): number | null => {
       const mvRespVars = params.responseVariables || 2;
       sampleSize = (6 + 0.3 * mvRespVars) * Math.log(1/(1-power)) / es + mvGroups + mvRespVars - 1;
       break;
+    case "sem":
+      // SEM sample size calculation
+      const df = params.degreesOfFreedom || 10;
+      sampleSize = Math.pow(Math.sqrt(2 + 0.1 * df) * Math.log(1/(1-power)) / es, 2);
+      break;
   }
   
   // Apply one-tailed vs two-tailed adjustment if not already handled in specific calculations
@@ -453,6 +468,11 @@ export const calculateEffectSize = (params: PowerParameters): number | null => {
       const mvRespVars = params.responseVariables || 2;
       effectSize = (6 + 0.3 * mvRespVars) * Math.log(1/(1-power)) / (n - mvGroups - mvRespVars + 1);
       break;
+    case "sem":
+      // SEM effect size calculation
+      const df = params.degreesOfFreedom || 10;
+      effectSize = Math.sqrt(2 + 0.1 * df) * Math.log(1/(1-power)) / Math.sqrt(n);
+      break;
   }
   
   // Apply one-tailed vs two-tailed adjustment if not already handled in specific calculations
@@ -506,10 +526,13 @@ export const calculateSignificanceLevel = (params: PowerParameters): number | nu
       
     case "chi-square-gof":
     case "chi-square-contingency":
-      // Chi-square tests may need adjusted alpha levels
-      const df = params.test === "chi-square-gof" 
-        ? (params.groups || 2) - 1 
-        : ((params.groups || 2) - 1) * ((params.observations || 2) - 1);
+    case "sem":
+      // Chi-square and SEM tests may need adjusted alpha levels
+      const df = params.test === "sem"
+        ? (params.degreesOfFreedom || 10)
+        : params.test === "chi-square-gof" 
+          ? (params.groups || 2) - 1 
+          : ((params.groups || 2) - 1) * ((params.observations || 2) - 1);
       
       if (df > 3) {
         alpha = alpha * (1 + 0.05 * (df - 3)); // Adjust for degrees of freedom

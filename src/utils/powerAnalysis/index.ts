@@ -18,7 +18,8 @@ import {
   powerChiSquare,
   powerProportionTest,
   powerLinearRegression,
-  powerMultipleRegression
+  powerMultipleRegression,
+  powerSEM
 } from './test-calculations';
 import { calculateScientificSampleSize } from './sample-size-calculations';
 import { calculateScientificEffectSize } from './effect-size-calculations';
@@ -120,6 +121,12 @@ export const calculateScientificPower = (params: PowerParameters): number | null
       const mvGroups = params.groups || 2;
       const mvRespVars = params.responseVariables || 2;
       power = powerOneWayANOVA(n, es, alpha, mvGroups * mvRespVars);
+      break;
+      
+    case "sem":
+      // Structural Equation Modeling
+      const df = params.degreesOfFreedom || 10;
+      power = powerSEM(n, es, alpha, df);
       break;
       
     default:
