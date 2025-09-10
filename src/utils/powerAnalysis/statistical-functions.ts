@@ -220,38 +220,40 @@ export const fCritical = (alpha: number, df1: number, df2: number): number => {
   return Math.max(0.001, result * (1 + correction));
 };
 
-// Non-central F-distribution CDF using simplified but accurate approximation
+// Non-central F-distribution CDF using Patnaik's chi-square approximation
 export const nonCentralFCdf = (f: number, df1: number, df2: number, ncp: number): number => {
   // Handle edge cases
   if (f <= 0) return 0;
   if (df1 <= 0 || df2 <= 0) return 0;
+  
+  // For central F-distribution (ncp = 0)
   if (Math.abs(ncp) < 1e-10) {
-    // Central F-distribution - use simpler approximation
-    const z = (f - 1) / Math.sqrt(2 / df1 + 2 / df2);
+    // Use Wilson-Hilferty transformation for central F
+    const h = 2 / (9 * df2);
+    const w = f * df1 / df2;
+    const z = (Math.pow(w, 1/3) - (1 - 2/(9*df1))) / Math.sqrt(2/(9*df1));
     return normCdf(z);
   }
   
-  console.log(`NonCentralF Debug: f=${f}, df1=${df1}, df2=${df2}, ncp=${ncp}`);
-  
-  // Use the classical approximation based on chi-square
-  // Transform to non-central chi-square: X = F * df1 ~ χ²(df1, ncp)
+  // Patnaik's approximation for non-central F
+  // Convert F * df1 to non-central chi-square with df1 and ncp
   const chiSq = f * df1;
   
-  // For non-central chi-square with ncp and df1 degrees of freedom:
-  // Mean = df1 + ncp, Variance = 2*df1 + 4*ncp
-  const mean = df1 + ncp;
-  const variance = 2 * df1 + 4 * ncp;
+  // Patnaik's method: approximate non-central χ² as scaled central χ²
+  // h = (df + 2*ncp) / (df + ncp)
+  // k = (df + ncp)² / (df + 2*ncp)
+  const h = (df1 + 2 * ncp) / (df1 + ncp);
+  const k = Math.pow(df1 + ncp, 2) / (df1 + 2 * ncp);
   
-  if (variance <= 0) {
-    console.log("NonCentralF Debug: variance <= 0, returning fallback");
+  if (h <= 0 || k <= 0) {
     return f > 1 ? 0.95 : 0.05;
   }
   
-  // Normal approximation to non-central chi-square
-  const z = (chiSq - mean) / Math.sqrt(variance);
-  const result = 1 - normCdf(z);
+  // Transform to standard normal using improved Wilson-Hilferty
+  const scaledChi = chiSq / h;
+  const cubeRoot = Math.pow(scaledChi / k, 1/3);
+  const z = (cubeRoot - (1 - 2/(9*k))) / Math.sqrt(2/(9*k));
   
-  console.log(`NonCentralF Debug: chiSq=${chiSq}, mean=${mean}, variance=${variance}, z=${z}, result=${result}`);
-  
-  return Math.max(0.001, Math.min(0.999, result));
+  // Return complementary CDF for power calculation
+  return Math.max(0.001, Math.min(0.999, normCdf(z)));
 };

@@ -209,12 +209,19 @@ export function Power3DPlotOptimized({ params }: Power3DPlotProps) {
     
     const { sampleSizes, effectSizes, powerMatrix } = surfaceData;
     
-    // Create 3D surface plot data
-    const data = [{
-      type: 'surface' as const,
-      x: sampleSizes,
-      y: effectSizes,
-      z: powerMatrix,
+      // Create 3D surface plot data - FIX AXIS ORIENTATION
+      // Debug matrix structure to fix inverted power relationship
+      console.log('3D Plot Debug:', { 
+        sampleSizes: sampleSizes.slice(0, 3), 
+        effectSizes: effectSizes.slice(0, 3), 
+        powerMatrix: powerMatrix.slice(0, 3).map(row => row.slice(0, 3))
+      });
+      
+      const data = [{
+        type: 'surface' as const,
+        x: sampleSizes, // X-axis: Sample Size
+        y: effectSizes, // Y-axis: Effect Size  
+        z: powerMatrix, // Z-axis: Power - powerMatrix[i][j] = power for sampleSizes[i], effectSizes[j]
       colorscale: 'Viridis',
       showscale: true,
       colorbar: {
