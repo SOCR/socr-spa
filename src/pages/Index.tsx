@@ -1,6 +1,7 @@
 
 import { PowerCalculator } from "@/components/PowerCalculator";
 import { PowerInformation } from "@/components/PowerInformation";
+import { PowerAnalysisGuide } from "@/components/documentation/PowerAnalysisGuide";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
