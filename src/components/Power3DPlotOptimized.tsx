@@ -14,6 +14,84 @@ export function Power3DPlotOptimized({ params }: Power3DPlotProps) {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Direct effect size calculation function - moved before useMemo to fix lexical scope
+  const calculateEffectSizeDirectly = (calcParams: PowerParameters): number | null => {
+    const { test, sampleSize, power, significanceLevel, tailType } = calcParams;
+    
+    if (!sampleSize || !power || !significanceLevel) return null;
+    
+    const n = sampleSize;
+    const targetPower = power;
+    const alpha = significanceLevel;
+    
+    try {
+      let effectSize: number;
+      
+      // Direct mathematical calculation based on test type
+      switch (test) {
+        case "ttest-one-sample":
+          // Direct formula: d = (z_β - z_α) / sqrt(n)
+          const zAlpha1 = tailType === "one" ? 1.645 : 1.96;
+          const zBeta1 = -0.84; // For 80% power
+          effectSize = (zBeta1 - (-zAlpha1)) / Math.sqrt(n);
+          break;
+          
+        case "ttest-two-sample":
+          // Direct formula for two-sample t-test
+          const zAlpha2 = tailType === "one" ? 1.645 : 1.96;
+          const zBeta2 = -0.84;
+          effectSize = (zBeta2 - (-zAlpha2)) / Math.sqrt(n / 2);
+          break;
+          
+        case "correlation":
+          // Fisher's Z transformation
+          const zAlpha3 = tailType === "one" ? 1.645 : 1.96;
+          const zBeta3 = -0.84;
+          const fisherZ = (zAlpha3 + Math.abs(zBeta3)) / Math.sqrt(n - 3);
+          effectSize = Math.tanh(fisherZ); // Convert back to correlation
+          break;
+          
+        case "anova":
+          // Cohen's f calculation
+          const groups = calcParams.groups || 3;
+          const dfBetween = groups - 1;
+          const dfWithin = n - groups;
+          const fCrit = 2.5; // Approximation for F-critical
+          effectSize = Math.sqrt(fCrit * dfBetween / n);
+          break;
+          
+        case "linear-regression":
+          // f² calculation
+          const df1 = calcParams.predictors || 1;
+          const df2 = n - df1 - 1;
+          effectSize = 0.15 / (1 + 0.15); // Medium effect size approximation
+          break;
+          
+        case "multiple-regression":
+          // Multiple regression f² calculation
+          const predictors = calcParams.predictors || 3;
+          const dfError = n - predictors - 1;
+          effectSize = Math.max(0.02, 0.15 * Math.sqrt(predictors / n));
+          break;
+          
+        case "sem":
+          // RMSEA calculation
+          const df = calcParams.degreesOfFreedom || 10;
+          effectSize = Math.sqrt(2.7 / (n - 1)) * Math.sqrt(df); // Approximation
+          break;
+          
+        default:
+          // Generic approximation
+          effectSize = Math.sqrt(2.7 / Math.sqrt(n));
+      }
+      
+      return Math.max(0.01, Math.min(2.0, Math.abs(effectSize)));
+    } catch (error) {
+      console.error("Error in effect size calculation:", error);
+      return 0.5; // Default medium effect size
+    }
+  };
+
   // Memoized surface generation for performance with error handling
   const surfaceData = useMemo(() => {
     if (!params.test) return null;
@@ -121,79 +199,6 @@ export function Power3DPlotOptimized({ params }: Power3DPlotProps) {
     };
   }
   }, [params]);
-
-  // Direct effect size calculation without binary search
-  const calculateEffectSizeDirectly = (calcParams: PowerParameters): number | null => {
-    const { test, sampleSize, power, significanceLevel, tailType } = calcParams;
-    
-    if (!sampleSize || !power || !significanceLevel) return null;
-    
-    const n = sampleSize;
-    const targetPower = power;
-    const alpha = significanceLevel;
-    
-    let effectSize: number;
-    
-    // Direct mathematical calculation based on test type
-    switch (test) {
-      case "ttest-one-sample":
-        // Direct formula: d = (z_β - z_α) / sqrt(n)
-        const zAlpha1 = tailType === "one" ? 1.645 : 1.96;
-        const zBeta1 = -0.84; // For 80% power
-        effectSize = (zBeta1 - (-zAlpha1)) / Math.sqrt(n);
-        break;
-        
-      case "ttest-two-sample":
-        // Direct formula for two-sample t-test
-        const zAlpha2 = tailType === "one" ? 1.645 : 1.96;
-        const zBeta2 = -0.84;
-        effectSize = (zBeta2 - (-zAlpha2)) / Math.sqrt(n / 2);
-        break;
-        
-      case "correlation":
-        // Fisher's Z transformation
-        const zAlpha3 = tailType === "one" ? 1.645 : 1.96;
-        const zBeta3 = -0.84;
-        const fisherZ = (zAlpha3 + Math.abs(zBeta3)) / Math.sqrt(n - 3);
-        effectSize = Math.tanh(fisherZ); // Convert back to correlation
-        break;
-        
-      case "anova":
-        // Cohen's f calculation
-        const groups = calcParams.groups || 3;
-        const dfBetween = groups - 1;
-        const dfWithin = n - groups;
-        const fCrit = 2.5; // Approximation for F-critical
-        effectSize = Math.sqrt(fCrit * dfBetween / n);
-        break;
-        
-      case "linear-regression":
-        // f² calculation
-        const df1 = calcParams.predictors || 1;
-        const df2 = n - df1 - 1;
-        effectSize = 0.15 / (1 + 0.15); // Medium effect size approximation
-        break;
-        
-      case "multiple-regression":
-        // Multiple regression f² calculation
-        const predictors = calcParams.predictors || 3;
-        const dfError = n - predictors - 1;
-        effectSize = Math.max(0.02, 0.15 * Math.sqrt(predictors / n));
-        break;
-        
-      case "sem":
-        // RMSEA calculation
-        const df = calcParams.degreesOfFreedom || 10;
-        effectSize = Math.sqrt(2.7 / (n - 1)) * Math.sqrt(df); // Approximation
-        break;
-        
-      default:
-        // Generic approximation
-        effectSize = Math.sqrt(2.7 / Math.sqrt(n));
-    }
-    
-    return Math.max(0.01, Math.min(2.0, Math.abs(effectSize)));
-  };
 
   useEffect(() => {
     if (!surfaceData) return;

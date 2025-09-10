@@ -55,14 +55,20 @@ export function PowerChart({ params, targetParameter }: PowerChartProps) {
                 <ChartFullscreenButton isFullScreen={is2DFullScreen} toggleFullScreen={toggle2DFullScreen} />
               </div>
             )}
-            <PowerCurveChart 
-              data={data}
-              xAxisDataKey={xAxisDataKey}
-              xAxisLabel={xAxisLabel}
-              yAxisLabel={yAxisLabel}
-              lineDataKey={lineDataKey}
-              isFullScreen={is2DFullScreen}
-            />
+            {data && data.length > 0 ? (
+              <PowerCurveChart 
+                data={data}
+                xAxisDataKey={xAxisDataKey}
+                xAxisLabel={xAxisLabel}
+                yAxisLabel={yAxisLabel}
+                lineDataKey={lineDataKey}
+                isFullScreen={is2DFullScreen}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                No chart data available. Please adjust your parameters.
+              </div>
+            )}
           </div>
         </div>
       </ErrorBoundary>
