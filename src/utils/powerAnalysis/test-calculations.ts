@@ -81,7 +81,7 @@ export const powerPairedTTest = (
 
 // Power calculation for one-way ANOVA
 export const powerOneWayANOVA = (
-  sampleSize: number, // Sample size per group
+  sampleSize: number, // Total sample size (not per group)
   effectSize: number, // Cohen's f
   alpha: number,
   groups: number = 3
@@ -90,12 +90,14 @@ export const powerOneWayANOVA = (
     return 0;
   }
 
-  const totalN = sampleSize * groups;
+  // Sample size per group
+  const nPerGroup = sampleSize / groups;
+  const totalN = sampleSize;
   const df1 = groups - 1;
   const df2 = totalN - groups;
   
   // Correct non-centrality parameter for ANOVA (Cohen's f)
-  // ncp = N * f^2 where f is Cohen's f effect size
+  // ncp = N * f^2 where N is total sample size
   const ncp = totalN * effectSize * effectSize;
   const fCrit = fCritical(alpha, df1, df2);
   
@@ -144,39 +146,65 @@ export const powerChiSquare = (
   alpha: number,
   df: number
 ): number => {
+  if (sampleSize <= 0 || effectSize < 0 || alpha <= 0 || alpha >= 1 || df <= 0) {
+    return 0;
+  }
+
   // Non-centrality parameter
   const ncp = sampleSize * effectSize * effectSize;
   
-  // Critical chi-square value (approximation)
-  const criticalChi = df * (1 + 2 / (9 * df) - 2 / (9 * df) * Math.pow(normInv(1 - alpha), 3/2));
+  // Critical chi-square value using better approximation
+  const criticalZ = normInv(1 - alpha);
+  const criticalChi = df + Math.sqrt(2 * df) * criticalZ + (2/3) * criticalZ * criticalZ;
   
-  // Calculate power (approximation)
-  const delta = ncp / df;
-  const powerValue = 1 - normCdf(
-    (Math.sqrt(2 * criticalChi) - Math.sqrt(2 * df - 1 + delta)) / 
-    Math.sqrt(1 + delta / df)
-  );
+  // Calculate power using improved normal approximation
+  // Mean of non-central chi-square = df + ncp
+  // Variance of non-central chi-square = 2 * (df + 2 * ncp)
+  const mean = df + ncp;
+  const variance = 2 * (df + 2 * ncp);
   
-  return Math.max(0.001, Math.min(0.999, powerValue));
+  if (variance <= 0) return 0.001;
+  
+  const z = (criticalChi - mean) / Math.sqrt(variance);
+  const power = 1 - normCdf(z);
+  
+  return Math.max(0.001, Math.min(0.999, power));
 };
 
 // Power calculation for proportion test
 export const powerProportionTest = (
   sampleSize: number,
-  effectSize: number, // h = 2*arcsin(sqrt(p1)) - 2*arcsin(sqrt(p0))
+  effectSize: number, // Cohen's h
   alpha: number,
   tailType: "one" | "two" = "two"
 ): number => {
+  if (sampleSize <= 0 || effectSize < 0 || alpha <= 0 || alpha >= 1) {
+    return 0;
+  }
+
   // Critical z-value
   const criticalZ = tailType === "two"
     ? Math.abs(normInv(alpha / 2))
     : Math.abs(normInv(alpha));
   
-  // Calculate power
+  // Calculate power using correct formula for proportion test
+  // Power = P(Z > z_crit - h*sqrt(n)) for one-tailed
+  // Power = P(|Z| > z_crit - h*sqrt(n)) for two-tailed
   const sqrtN = Math.sqrt(sampleSize);
-  const powerValue = 1 - normCdf(criticalZ - effectSize * sqrtN);
+  const z = criticalZ - effectSize * sqrtN;
   
-  return Math.max(0.001, Math.min(0.999, tailType === "one" ? powerValue : 2 * powerValue - 1));
+  let power;
+  if (tailType === "two") {
+    // Two-tailed test
+    power = 2 * (1 - normCdf(z)) - 1;
+    // Ensure power is positive
+    power = Math.max(power, 1 - normCdf(Math.abs(z)));
+  } else {
+    // One-tailed test
+    power = 1 - normCdf(z);
+  }
+  
+  return Math.max(0.001, Math.min(0.999, power));
 };
 
 // Power calculation for linear regression
@@ -230,24 +258,31 @@ export const powerMultipleRegression = (
 // Power calculation for SEM (Structural Equation Modeling)
 export const powerSEM = (
   sampleSize: number,
-  effectSize: number, // Using RMSEA as effect size
+  effectSize: number, // RMSEA
   alpha: number,
   df: number = 10
 ): number => {
-  // Calculate non-centrality parameter lambda based on effect size (RMSEA), sample size, and df
-  // Lambda = (N-1) * df * effectSize^2
-  const ncp = (sampleSize - 1) * df * Math.pow(effectSize, 2);
+  if (sampleSize <= 0 || effectSize < 0 || alpha <= 0 || alpha >= 1 || df <= 0) {
+    return 0;
+  }
+
+  // Calculate non-centrality parameter for SEM
+  // For RMSEA test: ncp = (N-1) * df * RMSEA^2
+  const ncp = (sampleSize - 1) * df * effectSize * effectSize;
   
-  // Critical chi-square value for alpha level and df
-  const criticalChi = df * (1 + 2 / (9 * df) - 2 / (9 * df) * Math.pow(normInv(1 - alpha), 1.5));
+  // Critical chi-square value
+  const criticalZ = normInv(1 - alpha);
+  const criticalChi = df + Math.sqrt(2 * df) * criticalZ + (2/3) * criticalZ * criticalZ;
   
-  // Calculate power (probability of rejecting H0 when H1 is true)
-  // Using chi-square distribution with df degrees of freedom and ncp as non-centrality parameter
-  // This is an approximation of the power for SEM
-  const powerValue = 1 - normCdf(
-    (Math.sqrt(2 * criticalChi) - Math.sqrt(2 * df - 1 + ncp / df)) / 
-    Math.sqrt(1 + ncp / (2 * df))
-  );
+  // Calculate power for non-central chi-square distribution
+  // This tests H0: RMSEA = 0 vs H1: RMSEA = effectSize
+  const mean = df + ncp;
+  const variance = 2 * (df + 2 * ncp);
   
-  return Math.max(0.001, Math.min(0.999, powerValue));
+  if (variance <= 0) return 0.001;
+  
+  const z = (criticalChi - mean) / Math.sqrt(variance);
+  const power = 1 - normCdf(z);
+  
+  return Math.max(0.001, Math.min(0.999, power));
 };

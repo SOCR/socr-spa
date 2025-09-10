@@ -220,41 +220,44 @@ export const fCritical = (alpha: number, df1: number, df2: number): number => {
   return Math.max(0.001, result * (1 + correction));
 };
 
-// Non-central F-distribution CDF using Patnaik's chi-square approximation
+// Non-central F-distribution CDF using improved Patnaik approximation
 export const nonCentralFCdf = (f: number, df1: number, df2: number, ncp: number): number => {
   // Handle edge cases
   if (f <= 0) return 0;
   if (df1 <= 0 || df2 <= 0) return 0;
   if (Math.abs(ncp) < 1e-10) {
-    // Central F-distribution approximation
-    return 1 - Math.exp(-0.5 * f * df1);
+    // Central F-distribution - use beta distribution relationship
+    const x = (df1 * f) / (df1 * f + df2);
+    // Simplified approximation for central F
+    const z = (x - 0.5) / Math.sqrt(x * (1 - x) / Math.min(df1, df2));
+    return normCdf(z);
   }
   
-  // Patnaik's chi-square approximation for non-central F
+  // Improved approximation for non-central F distribution
+  // Using method from Johnson & Kotz
   const lambda = ncp;
+  
+  // Apply Patnaik's chi-square approximation
+  const h = 1 - (2 * (df1 + lambda)) / (3 * (df1 + 2 * lambda));
+  const effectiveDf = Math.pow(df1 + lambda, 2) / (df1 + 2 * lambda);
   
   // Transform F to chi-square
   const chiSq = f * df1;
+  const scaledChi = chiSq / h;
   
-  // Calculate effective parameters using Patnaik's method
-  const h = 1 - (2 * (df1 + lambda)) / (3 * (df1 + 2 * lambda));
-  const effectiveDf = (df1 + lambda) * (df1 + lambda) / (df1 + 2 * lambda);
-  const effectiveNcp = lambda * (df1 + lambda) / (df1 + 2 * lambda);
+  // Calculate parameters for non-central chi-square approximation
+  const ncpAdjusted = lambda / h;
+  const mean = effectiveDf + ncpAdjusted;
+  const variance = 2 * effectiveDf + 4 * ncpAdjusted;
   
-  // Apply Patnaik transformation
-  const adjustedChi = chiSq / h;
-  const mean = effectiveDf + effectiveNcp;
-  const variance = 2 * effectiveDf + 4 * effectiveNcp;
-  
-  // Normalize and use normal approximation
   if (variance <= 0) {
-    return f > 1 ? 0.8 : 0.2; // Fallback
+    return f > 1 ? 0.95 : 0.05; // Reasonable fallback
   }
   
-  const z = (adjustedChi - mean) / Math.sqrt(variance);
+  // Use Wilson-Hilferty transformation for better accuracy
+  const cubicMean = Math.pow(mean, 1/3);
+  const cubicVar = variance / (9 * Math.pow(mean, 2/3));
+  const transformed = (Math.pow(scaledChi, 1/3) - cubicMean) / Math.sqrt(cubicVar);
   
-  // Apply continuity correction for better accuracy
-  const continuityCorrection = 0.5 / Math.sqrt(variance);
-  
-  return 1 - normCdf(z - continuityCorrection);
+  return 1 - normCdf(transformed);
 };
