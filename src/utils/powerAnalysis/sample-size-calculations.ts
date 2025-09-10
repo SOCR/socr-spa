@@ -74,45 +74,45 @@ export const calculateScientificSampleSize = (params: PowerParameters): number |
       const alpha = params.significanceLevel;
       const power = params.power;
       
-      // Fixed ANOVA sample size calculation to match G*Power standard
-      // Use iterative approach for accuracy since analytical formula is complex
-      let n = groups * 10; // Initial guess for total N
+      // CORRECTED: Use per-group sample size in iterative calculation
+      let nPerGroup = 10; // Initial guess for n per group
       let calculatedPower = 0;
       let iterations = 0;
       const maxIterations = 100;
       
       while (Math.abs(calculatedPower - power) > 0.01 && iterations < maxIterations) {
+        const totalN = nPerGroup * groups;
         const df1 = groups - 1;
-        const df2 = n - groups;
+        const df2 = totalN - groups;
         
         if (df2 <= 0) {
-          n += groups;
+          nPerGroup += 1;
           iterations++;
           continue;
         }
         
-        // Use standard ANOVA ncp = N_total * f²
-        const ncp = n * f * f;
+        // CORRECT: ncp = n_per_group * f² (not total N)
+        const ncp = nPerGroup * f * f;
         
         // Approximate power using simplified F-test power
-        // This matches the G*Power approach more closely
         const fCritApprox = 2.5; // Rough approximation for F critical value
         calculatedPower = Math.max(0.001, Math.min(0.999, 1 - 1 / (1 + ncp / (df1 * fCritApprox))));
         
         if (calculatedPower < power) {
-          n += Math.max(1, Math.floor((power - calculatedPower) * n * 0.5));
+          nPerGroup += Math.max(1, Math.ceil((power - calculatedPower) * nPerGroup * 0.5));
         } else if (calculatedPower > power + 0.05) {
-          n -= Math.max(1, Math.floor((calculatedPower - power) * n * 0.2));
+          nPerGroup -= Math.max(1, Math.floor((calculatedPower - power) * nPerGroup * 0.2));
         } else {
           break; // Close enough
         }
         
         iterations++;
-        n = Math.max(groups + 1, n);
+        nPerGroup = Math.max(2, nPerGroup);
       }
       
-      // Return total sample size (matching G*Power convention)
-      return Math.max(groups * 4, Math.ceil(n));
+      // Return total sample size
+      const totalN = nPerGroup * groups;
+      return Math.max(groups * 4, Math.ceil(totalN));
     }
 
     case "correlation": {
@@ -172,8 +172,7 @@ export const calculateScientificSampleSize = (params: PowerParameters): number |
       const alpha = params.significanceLevel;
       const predictors = params.predictors || 3;
       
-      // Use iterative approach for multiple regression sample size
-      // This is more accurate than analytical approximations
+      // CORRECTED: Use proper ncp = df2 * f² for multiple regression
       let n = predictors + 20; // Initial guess
       let calculatedPower = 0;
       let iterations = 0;
@@ -189,10 +188,10 @@ export const calculateScientificSampleSize = (params: PowerParameters): number |
           continue;
         }
         
-        // Standard multiple regression ncp = N * f²
-        const ncp = n * f2;
+        // CORRECT: ncp = df2 * f² for multiple regression F-test
+        const ncp = df2 * f2;
         
-        // Approximate F critical value (rough approximation)
+        // Approximate F critical value
         const fCritApprox = 2.5 + predictors * 0.1;
         
         // Approximate power calculation

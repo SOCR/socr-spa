@@ -81,21 +81,22 @@ export const powerPairedTTest = (
 
 /**
  * One-way ANOVA power calculation (Cohen's f)
- * Fixed to use G*Power standard: ncp = N_total * f² (not per-group)
+ * CORRECTED: Uses per-group sample size for ncp calculation
  */
 export const powerOneWayANOVA = (sampleSize: number, effectSize: number, alpha: number, groups: number = 3): number => {
   if (sampleSize <= 1 || effectSize < 0 || alpha <= 0 || alpha >= 1 || groups < 2) {
     return 0;
   }
 
-  // G*Power and Cohen's standard: sampleSize is TOTAL sample size
+  // Standard interpretation: sampleSize is TOTAL sample size
   const totalN = sampleSize;
+  const nPerGroup = totalN / groups;
   const df1 = groups - 1;
   const df2 = totalN - groups;
   
-  // Standard ANOVA non-centrality parameter: λ = N_total * f²
-  // This matches G*Power, Cohen (1988), and most power analysis software
-  const ncp = totalN * effectSize * effectSize;
+  // CORRECT ANOVA formula: ncp = n_per_group × f² (not total N)
+  // This is the standard Cohen (1988) and statistical textbook formula
+  const ncp = nPerGroup * effectSize * effectSize;
   const fCrit = fCritical(alpha, df1, df2);
   
   // Power = P(F > F_crit | H1) under non-central F
@@ -136,7 +137,7 @@ export const powerCorrelation = (
   return Math.max(0.001, Math.min(0.999, power));
 };
 
-// Power calculation for chi-square tests - Fixed approximation
+// Power calculation for chi-square tests - CORRECTED formula
 export const powerChiSquare = (
   sampleSize: number,
   effectSize: number, // Cohen's w
@@ -150,25 +151,20 @@ export const powerChiSquare = (
   // Non-centrality parameter for chi-square test
   const ncp = sampleSize * effectSize * effectSize;
   
-  // Critical chi-square value using more accurate approximation
+  // Critical chi-square value using standard chi-square table approximation
   const criticalZ = normInv(1 - alpha);
-  // Wilson-Hilferty approximation for critical chi-square
-  const h = 2 / (9 * df);
-  const criticalChi = df * Math.pow(1 - h + criticalZ * Math.sqrt(h), 3);
+  const criticalChi = df + Math.sqrt(2 * df) * criticalZ + (2/3) * criticalZ * criticalZ;
   
-  // Power calculation using non-central chi-square properties
-  // Use Patnaik's approximation for non-central chi-square
-  const hNonCentral = (df + 2 * ncp) / (df + ncp);
-  const kNonCentral = Math.pow(df + ncp, 2) / (df + 2 * ncp);
+  // Power calculation using non-central chi-square distribution
+  // Mean = df + ncp, Variance = 2*(df + 2*ncp)
+  const mean = df + ncp;
+  const variance = 2 * (df + 2 * ncp);
   
-  if (hNonCentral <= 0 || kNonCentral <= 0) return 0.001;
+  if (variance <= 0) return 0.001;
   
-  // Transform to standard normal
-  const scaledChi = criticalChi / hNonCentral;
-  const cubeRoot = Math.pow(scaledChi / kNonCentral, 1/3);
-  const z = (cubeRoot - (1 - 2/(9*kNonCentral))) / Math.sqrt(2/(9*kNonCentral));
-  
-  const power = normCdf(z); // Note: this is P(reject H0)
+  // Standardize and calculate power (probability of exceeding critical value)
+  const z = (criticalChi - mean) / Math.sqrt(variance);
+  const power = 1 - normCdf(z);
   
   return Math.max(0.001, Math.min(0.999, power));
 };
@@ -236,7 +232,7 @@ export const powerLinearRegression = (
 
 /**
  * Multiple regression power calculation (Cohen's f²)
- * Fixed to use standard regression power formula
+ * CORRECTED: Uses proper f² to ncp conversion for regression F-test
  */
 export const powerMultipleRegression = (sampleSize: number, effectSize: number, alpha: number, predictors: number = 3): number => {
   if (sampleSize <= predictors + 1 || effectSize < 0 || alpha <= 0 || alpha >= 1) {
@@ -246,9 +242,9 @@ export const powerMultipleRegression = (sampleSize: number, effectSize: number, 
   const df1 = predictors;
   const df2 = sampleSize - predictors - 1;
   
-  // Standard multiple regression non-centrality parameter
-  // ncp = N * f² / (1 + f²) - this is the correct formula for regression F-test
-  const ncp = sampleSize * effectSize;
+  // CORRECT: For Cohen's f², ncp = df2 * f² / (1 - R²)
+  // Since f² = R²/(1-R²), we get: ncp = df2 * f²
+  const ncp = df2 * effectSize;
   const fCrit = fCritical(alpha, df1, df2);
   
   // Power = P(F > F_crit | H1) under non-central F distribution

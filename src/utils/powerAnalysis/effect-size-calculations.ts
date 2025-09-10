@@ -57,7 +57,7 @@ export const calculateScientificEffectSize = (params: PowerParameters): number |
       break;
       
     case "anova": {
-      // One-way ANOVA - fixed to use proper Cohen's f calculation
+      // One-way ANOVA - CORRECTED to use per-group sample size
       if (!params.sampleSize || !params.power || !params.significanceLevel) return null;
       
       const n = params.sampleSize;
@@ -73,9 +73,12 @@ export const calculateScientificEffectSize = (params: PowerParameters): number |
       
       while (Math.abs(calculatedPower - power) > 0.01 && iterations < maxIterations) {
         // Calculate power using current effect size
+        const nPerGroup = n / groups;
         const df1 = groups - 1;
         const df2 = n - groups;
-        const ncp = n * f * f; // Standard ANOVA ncp formula
+        
+        // CORRECT: ncp = n_per_group * f² (not total N)
+        const ncp = nPerGroup * f * f;
         
         // Rough power approximation
         const fCritApprox = 2.5; 
@@ -156,7 +159,7 @@ export const calculateScientificEffectSize = (params: PowerParameters): number |
       break;
       
     case "multiple-regression": {
-      // Multiple regression - fixed to use proper f² calculation
+      // Multiple regression - CORRECTED to use proper f² calculation
       if (!params.sampleSize || !params.power || !params.significanceLevel) return null;
       
       const n = params.sampleSize;
@@ -176,8 +179,8 @@ export const calculateScientificEffectSize = (params: PowerParameters): number |
         
         if (df2 <= 0) break;
         
-        // Standard multiple regression ncp = N * f²
-        const ncp = n * fSquared;
+        // CORRECT: ncp = df2 * f² for multiple regression
+        const ncp = df2 * fSquared;
         
         // Rough power approximation
         const fCritApprox = 2.5 + predictors * 0.1;
