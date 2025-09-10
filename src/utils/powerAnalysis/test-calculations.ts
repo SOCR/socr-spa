@@ -11,45 +11,57 @@ export const powerOneSampleTTest = (
   alpha: number,
   tailType: "one" | "two" = "two"
 ): number => {
-  const df = sampleSize - 1;
-  const ncp = effectSize * Math.sqrt(sampleSize); // Non-centrality parameter
-  const criticalT = tCritical(alpha, df, tailType);
-  
-  // Calculate power using non-central t-distribution
-  if (tailType === "two") {
-    // Two-tailed test
-    return 1 - (nonCentralTCdf(criticalT, df, ncp) - nonCentralTCdf(-criticalT, df, ncp));
-  } else {
-    // One-tailed test
-    return 1 - nonCentralTCdf(criticalT, df, ncp);
+  if (sampleSize <= 0 || effectSize < 0 || alpha <= 0 || alpha >= 1) {
+    return 0;
   }
+
+  const df = sampleSize - 1;
+  // Correct non-centrality parameter for one-sample t-test
+  const ncp = effectSize * Math.sqrt(sampleSize);
+  const tCrit = tCritical(alpha, df, tailType);
+  
+  let power;
+  if (tailType === "two") {
+    // Two-tailed test: P(|T| > t_crit) under H1
+    const upperTail = 1 - nonCentralTCdf(tCrit, df, ncp);
+    const lowerTail = nonCentralTCdf(-tCrit, df, ncp);
+    power = upperTail + lowerTail;
+  } else {
+    // One-tailed test: P(T > t_crit) under H1
+    power = 1 - nonCentralTCdf(tCrit, df, ncp);
+  }
+  
+  return Math.max(0.001, Math.min(0.999, power));
 };
 
 // Power calculation for two-sample t-test (independent samples)
 export const powerTwoSampleTTest = (
-  sampleSize: number,  // Total sample size across both groups
+  sampleSize: number,  // Sample size per group
   effectSize: number,
   alpha: number,
   tailType: "one" | "two" = "two"
 ): number => {
-  const n1 = Math.floor(sampleSize / 2); // Sample size in group 1
-  const n2 = sampleSize - n1;            // Sample size in group 2
-  
-  // Calculate degrees of freedom
-  const df = n1 + n2 - 2;
-  
-  // Calculate non-centrality parameter (Cohen's d formula)
-  const ncp = effectSize * Math.sqrt((n1 * n2) / (n1 + n2)); 
-  
-  // Critical value for the test using proper t-distribution
-  const criticalT = tCritical(alpha, df, tailType);
-  
-  // Calculate power using non-central t-distribution
-  if (tailType === "two") {
-    return 1 - (nonCentralTCdf(criticalT, df, ncp) - nonCentralTCdf(-criticalT, df, ncp));
-  } else {
-    return 1 - nonCentralTCdf(criticalT, df, ncp);
+  if (sampleSize <= 1 || effectSize < 0 || alpha <= 0 || alpha >= 1) {
+    return 0;
   }
+
+  const df = 2 * sampleSize - 2;
+  // Correct non-centrality parameter for two-sample t-test
+  const ncp = effectSize * Math.sqrt(sampleSize / 2);
+  const tCrit = tCritical(alpha, df, tailType);
+  
+  let power;
+  if (tailType === "two") {
+    // Two-tailed test: P(|T| > t_crit) under H1
+    const upperTail = 1 - nonCentralTCdf(tCrit, df, ncp);
+    const lowerTail = nonCentralTCdf(-tCrit, df, ncp);
+    power = upperTail + lowerTail;
+  } else {
+    // One-tailed test: P(T > t_crit) under H1
+    power = 1 - nonCentralTCdf(tCrit, df, ncp);
+  }
+  
+  return Math.max(0.001, Math.min(0.999, power));
 };
 
 // Power calculation for paired t-test
@@ -69,26 +81,28 @@ export const powerPairedTTest = (
 
 // Power calculation for one-way ANOVA
 export const powerOneWayANOVA = (
-  sampleSize: number, // Total sample size
+  sampleSize: number, // Sample size per group
   effectSize: number, // Cohen's f
   alpha: number,
   groups: number = 3
 ): number => {
-  // Sample size per group
-  const n = sampleSize / groups;
-  
-  // Degrees of freedom
+  if (sampleSize <= 1 || effectSize < 0 || alpha <= 0 || alpha >= 1 || groups < 2) {
+    return 0;
+  }
+
+  const totalN = sampleSize * groups;
   const df1 = groups - 1;
-  const df2 = sampleSize - groups;
+  const df2 = totalN - groups;
   
-  // Non-centrality parameter (lambda = n * groups * f²)
-  const ncp = n * groups * effectSize * effectSize;
+  // Correct non-centrality parameter for ANOVA (Cohen's f)
+  // ncp = N * f^2 where f is Cohen's f effect size
+  const ncp = totalN * effectSize * effectSize;
+  const fCrit = fCritical(alpha, df1, df2);
   
-  // Critical F-value
-  const criticalF = fCritical(alpha, df1, df2);
+  // Power = P(F > F_crit | H1)
+  const power = 1 - nonCentralFCdf(fCrit, df1, df2, ncp);
   
-  // Calculate power (probability of exceeding critical F)
-  return 1 - nonCentralFCdf(criticalF, df1, df2, ncp);
+  return Math.max(0.001, Math.min(0.999, power));
 };
 
 // Power calculation for correlation test
@@ -98,22 +112,29 @@ export const powerCorrelation = (
   alpha: number,
   tailType: "one" | "two" = "two"
 ): number => {
-  // Fisher's Z transformation of correlation coefficient
-  const fisherZ = 0.5 * Math.log((1 + effectSize) / (1 - effectSize));
+  if (sampleSize <= 2 || effectSize < 0 || effectSize >= 1 || alpha <= 0 || alpha >= 1) {
+    return 0;
+  }
+
+  const df = sampleSize - 2;
   
-  // Standard error of Fisher's Z
-  const se = 1 / Math.sqrt(sampleSize - 3);
+  // Convert correlation to t-statistic under alternative hypothesis
+  // t = r * sqrt((n-2)/(1-r^2))
+  const tStat = effectSize * Math.sqrt(df / (1 - effectSize * effectSize));
+  const tCrit = tCritical(alpha, df, tailType);
   
-  // Critical z-value
-  const criticalZ = tailType === "two"
-    ? Math.abs(normInv(alpha / 2))
-    : Math.abs(normInv(alpha));
+  let power;
+  if (tailType === "two") {
+    // Two-tailed test: P(|T| > t_crit) under H1
+    const upperTail = 1 - nonCentralTCdf(tCrit, df, tStat);
+    const lowerTail = nonCentralTCdf(-tCrit, df, tStat);
+    power = upperTail + lowerTail;
+  } else {
+    // One-tailed test: P(T > t_crit) under H1
+    power = 1 - nonCentralTCdf(tCrit, df, tStat);
+  }
   
-  // Calculate power
-  const criticalValue = criticalZ * se;
-  const powerValue = normCdf((Math.abs(fisherZ) - criticalValue) / se);
-  
-  return tailType === "two" ? powerValue : Math.max(0.5, powerValue);
+  return Math.max(0.001, Math.min(0.999, power));
 };
 
 // Power calculation for chi-square tests
@@ -184,12 +205,26 @@ export const powerLinearRegression = (
 // Power calculation for multiple regression
 export const powerMultipleRegression = (
   sampleSize: number,
-  effectSize: number, // f²
+  effectSize: number, // Cohen's f²
   alpha: number,
   predictors: number = 3
 ): number => {
-  // Use the linear regression function with multiple predictors
-  return powerLinearRegression(sampleSize, effectSize, alpha, predictors);
+  if (sampleSize <= predictors + 1 || effectSize < 0 || alpha <= 0 || alpha >= 1) {
+    return 0;
+  }
+
+  const df1 = predictors;
+  const df2 = sampleSize - predictors - 1;
+  
+  // Convert Cohen's f² to non-centrality parameter
+  // For multiple regression: ncp = N * f²
+  const ncp = sampleSize * effectSize;
+  const fCrit = fCritical(alpha, df1, df2);
+  
+  // Power = P(F > F_crit | H1)
+  const power = 1 - nonCentralFCdf(fCrit, df1, df2, ncp);
+  
+  return Math.max(0.001, Math.min(0.999, power));
 };
 
 // Power calculation for SEM (Structural Equation Modeling)

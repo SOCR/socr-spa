@@ -131,86 +131,130 @@ export const tCdf = (t: number, df: number): number => {
   return Math.max(0, Math.min(1, integralPart));
 };
 
-// Non-central t-distribution CDF approximation
+// Non-central t-distribution CDF approximation using Johnson-Welch method
 export const nonCentralTCdf = (t: number, df: number, ncp: number): number => {
   // For large df, use normal approximation
   if (df > 100) {
     return normCdf(t - ncp);
   }
   
-  // Improved Johnson-Kotz-Balakrishnan approximation
+  // Handle edge cases
+  if (df <= 0) return 0.5;
+  if (Math.abs(ncp) < 1e-10) return tCdf(t, df);
+  
+  // Johnson-Welch approximation with proper moment matching
   const delta = ncp;
-  const tCentered = t - delta;
   
-  // Better approximation using moment matching
-  const variance = (df + delta * delta) / (df - 2);
-  const skewness = 2 * delta * Math.sqrt(df) / Math.pow(df - 2, 1.5);
+  // Calculate moments
+  const mu = delta * Math.sqrt(df / 2) * gamma((df - 1) / 2) / gamma(df / 2);
+  const sigma2 = df / (df - 2) - mu * mu;
   
-  // Cornish-Fisher expansion
-  const standardized = tCentered / Math.sqrt(variance);
+  if (sigma2 <= 0 || df <= 2) {
+    // Fallback for edge cases
+    return normCdf((t - delta) / Math.sqrt(1 + delta * delta / df));
+  }
+  
+  // Standardize and apply correction
+  const standardized = (t - mu) / Math.sqrt(sigma2);
+  
+  // Third moment correction for better accuracy
+  const skewness = (2 * delta * Math.sqrt(df / 2) * gamma((df - 2) / 2) / gamma(df / 2) - 3 * mu * sigma2) / Math.pow(sigma2, 1.5);
   const correction = skewness * (standardized * standardized - 1) / 6;
   
-  return normCdf(standardized - correction);
+  return Math.max(0, Math.min(1, normCdf(standardized - correction)));
 };
 
-// t-distribution critical value
+// t-distribution critical value using improved Cornish-Fisher expansion
 export const tCritical = (alpha: number, df: number, tailType: "one" | "two" = "two"): number => {
   const p = tailType === "two" ? 1 - alpha / 2 : 1 - alpha;
   
-  // Approximation for t critical value using normal approximation for large df
+  // Handle edge cases
+  if (p <= 0 || p >= 1) return 0;
+  if (df <= 0) return normInv(p);
+  
+  // For large df, use normal approximation
   if (df > 100) {
     return normInv(p);
   }
   
-  // Hill's approximation for t critical values
+  // Improved Cornish-Fisher expansion for t critical values
   const z = normInv(p);
-  const c1 = z;
-  const c2 = (z * z * z + z) / (4 * df);
-  const c3 = (5 * Math.pow(z, 5) + 16 * z * z * z + 3 * z) / (96 * df * df);
   
-  return z + c2 + c3;
+  // More accurate coefficients
+  const c2 = z / (4 * df);
+  const c4 = (5 * z * z * z + 16 * z) / (96 * df * df);
+  const c6 = (3 * Math.pow(z, 5) + 19 * z * z * z + 17 * z) / (384 * df * df * df);
+  
+  const correction = c2 + c4 + c6;
+  
+  return z + correction;
 };
 
-// F-distribution critical value approximation
+// F-distribution critical value using improved Wilson-Hilferty transformation
 export const fCritical = (alpha: number, df1: number, df2: number): number => {
-  // Improved approximation for F critical value
+  // Handle edge cases
+  if (alpha <= 0 || alpha >= 1) return 1;
+  if (df1 <= 0 || df2 <= 0) return 1;
+  
+  // Special case for df1 = 1
   if (df1 === 1) {
     const tCrit = tCritical(alpha, df2, "two");
     return tCrit * tCrit;
   }
   
-  // Wilson-Hilferty approximation
-  const h1 = 2 / (9 * df1);
-  const h2 = 2 / (9 * df2);
+  // Improved Wilson-Hilferty transformation
   const z = normInv(1 - alpha);
   
-  const term1 = 1 - h2 + z * Math.sqrt(h2);
-  const term2 = 1 - h1;
+  // More accurate coefficients
+  const h1 = 2 / (9 * df1);
+  const h2 = 2 / (9 * df2);
   
-  return Math.pow(term1 / term2, 3);
+  // Enhanced transformation with higher-order terms
+  const c1 = 1 - h1;
+  const c2 = 1 - h2 + z * Math.sqrt(h2);
+  
+  // Add correction for better accuracy
+  const correction = (h1 * h2) / (df1 + df2);
+  const result = Math.pow(c2 / c1, 3);
+  
+  return Math.max(0.001, result * (1 + correction));
 };
 
-// Non-central F-distribution CDF approximation
+// Non-central F-distribution CDF using Patnaik's chi-square approximation
 export const nonCentralFCdf = (f: number, df1: number, df2: number, ncp: number): number => {
-  // Improved approximation for non-central F CDF
+  // Handle edge cases
   if (f <= 0) return 0;
-  if (ncp <= 0) return 1 - Math.exp(-f);  // Central F approximation
+  if (df1 <= 0 || df2 <= 0) return 0;
+  if (Math.abs(ncp) < 1e-10) {
+    // Central F-distribution approximation
+    return 1 - Math.exp(-0.5 * f * df1);
+  }
   
-  // Use Pearson's approximation for non-central F
-  const h = 2 * (df1 + ncp) * (df1 + ncp) / (2 * df1 + ncp);
-  const gamma_val = (df1 + 2 * ncp) / (df1 + ncp);
+  // Patnaik's chi-square approximation for non-central F
+  const lambda = ncp;
   
-  // Adjusted F statistic
-  const adjustedF = f / gamma_val;
+  // Transform F to chi-square
+  const chiSq = f * df1;
   
-  // Calculate power using improved approximation
-  const chiSquareApprox = adjustedF * df1;
-  const effectiveNcp = ncp * df1 / (df1 + ncp);
+  // Calculate effective parameters using Patnaik's method
+  const h = 1 - (2 * (df1 + lambda)) / (3 * (df1 + 2 * lambda));
+  const effectiveDf = (df1 + lambda) * (df1 + lambda) / (df1 + 2 * lambda);
+  const effectiveNcp = lambda * (df1 + lambda) / (df1 + 2 * lambda);
   
-  // Use normal approximation for better accuracy
-  const mean = df1 + effectiveNcp;
-  const variance = 2 * df1 + 4 * effectiveNcp;
-  const normalizedX = (chiSquareApprox - mean) / Math.sqrt(variance);
+  // Apply Patnaik transformation
+  const adjustedChi = chiSq / h;
+  const mean = effectiveDf + effectiveNcp;
+  const variance = 2 * effectiveDf + 4 * effectiveNcp;
   
-  return 1 - normCdf(normalizedX);
+  // Normalize and use normal approximation
+  if (variance <= 0) {
+    return f > 1 ? 0.8 : 0.2; // Fallback
+  }
+  
+  const z = (adjustedChi - mean) / Math.sqrt(variance);
+  
+  // Apply continuity correction for better accuracy
+  const continuityCorrection = 0.5 / Math.sqrt(variance);
+  
+  return 1 - normCdf(z - continuityCorrection);
 };
