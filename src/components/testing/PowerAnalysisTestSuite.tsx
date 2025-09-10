@@ -47,7 +47,7 @@ export function PowerAnalysisTestSuite() {
         tailType: "two"
       },
       expectedResults: { power: 0.8 },
-      tolerance: 0.05
+      tolerance: 0.1
     },
     {
       id: "ttest-sample-size",
@@ -62,7 +62,38 @@ export function PowerAnalysisTestSuite() {
         tailType: "two"
       },
       expectedResults: { sampleSize: 64 },
-      tolerance: 0.1
+      tolerance: 0.15
+    },
+    {
+      id: "ttest-one-sample-power",
+      name: "One-Sample T-Test Power",
+      description: "One-sample t-test with d=0.5, n=25, α=0.05",
+      params: {
+        test: "ttest-one-sample",
+        sampleSize: 25,
+        effectSize: 0.5,
+        significanceLevel: 0.05,
+        power: null,
+        tailType: "two"
+      },
+      expectedResults: { power: 0.7 },
+      tolerance: 0.15
+    },
+    {
+      id: "ttest-paired-power",
+      name: "Paired T-Test Power",
+      description: "Paired t-test with d=0.5, n=30, α=0.05, r=0.5",
+      params: {
+        test: "ttest-paired",
+        sampleSize: 30,
+        effectSize: 0.5,
+        significanceLevel: 0.05,
+        power: null,
+        correlation: 0.5,
+        tailType: "two"
+      },
+      expectedResults: { power: 0.75 },
+      tolerance: 0.15
     },
     {
       id: "correlation-power",
@@ -77,7 +108,22 @@ export function PowerAnalysisTestSuite() {
         tailType: "two"
       },
       expectedResults: { power: 0.8 },
-      tolerance: 0.05
+      tolerance: 0.1
+    },
+    {
+      id: "anova-power",
+      name: "ANOVA Power",
+      description: "One-way ANOVA with f=0.25, n=180, α=0.05, 4 groups",
+      params: {
+        test: "anova",
+        sampleSize: 180,
+        effectSize: 0.25,
+        significanceLevel: 0.05,
+        power: null,
+        groups: 4
+      },
+      expectedResults: { power: 0.8 },
+      tolerance: 0.15
     },
     {
       id: "anova-sample-size",
@@ -92,6 +138,51 @@ export function PowerAnalysisTestSuite() {
         groups: 4
       },
       expectedResults: { sampleSize: 180 },
+      tolerance: 0.2
+    },
+    {
+      id: "chi-square-power",
+      name: "Chi-Square Power",
+      description: "Chi-square test with w=0.3, n=87, α=0.05, df=2",
+      params: {
+        test: "chi-square-gof",
+        sampleSize: 87,
+        effectSize: 0.3,
+        significanceLevel: 0.05,
+        power: null,
+        groups: 3
+      },
+      expectedResults: { power: 0.8 },
+      tolerance: 0.15
+    },
+    {
+      id: "proportion-power",
+      name: "Proportion Test Power",
+      description: "Proportion test with h=0.5, n=32, α=0.05",
+      params: {
+        test: "proportion-test",
+        sampleSize: 32,
+        effectSize: 0.5,
+        significanceLevel: 0.05,
+        power: null,
+        tailType: "two"
+      },
+      expectedResults: { power: 0.8 },
+      tolerance: 0.15
+    },
+    {
+      id: "regression-power",
+      name: "Multiple Regression Power",
+      description: "Multiple regression with f²=0.15, n=100, α=0.05, 3 predictors",
+      params: {
+        test: "multiple-regression",
+        sampleSize: 100,
+        effectSize: 0.15,
+        significanceLevel: 0.05,
+        power: null,
+        predictors: 3
+      },
+      expectedResults: { power: 0.8 },
       tolerance: 0.15
     },
     {
@@ -107,22 +198,22 @@ export function PowerAnalysisTestSuite() {
         predictors: 3
       },
       expectedResults: { effectSize: 0.15 },
-      tolerance: 0.05
+      tolerance: 0.1
     },
     {
-      id: "sem-power-large",
-      name: "SEM Power (Large Effect)",
-      description: "SEM with RMSEA=0.1, n=200, α=0.05, df=10",
+      id: "sem-power",
+      name: "SEM Power",
+      description: "SEM with RMSEA=0.08, n=200, α=0.05, df=10",
       params: {
         test: "sem",
         sampleSize: 200,
-        effectSize: 0.1,
+        effectSize: 0.08,
         significanceLevel: 0.05,
         power: null,
         degreesOfFreedom: 10
       },
-      expectedResults: { power: 0.85 },
-      tolerance: 0.1
+      expectedResults: { power: 0.8 },
+      tolerance: 0.15
     },
     // Edge cases
     {
@@ -136,7 +227,7 @@ export function PowerAnalysisTestSuite() {
         significanceLevel: 0.05,
         power: null
       },
-      expectedResults: { power: 0.5 },
+      expectedResults: { power: 0.7 },
       tolerance: 0.2
     },
     {

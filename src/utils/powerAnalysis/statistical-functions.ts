@@ -106,24 +106,29 @@ export const normInv = (p: number): number => {
 
 // t-distribution cumulative distribution function approximation
 export const tCdf = (t: number, df: number): number => {
-  // Approximation for t distribution CDF
-  const a = df / 2;
-  const b = 0.5;
-  const x = a / (a + t * t / 2);
+  // Better approximation for t distribution CDF
+  if (df <= 0) return 0.5;
   
-  // Incomplete beta function approximation
-  if (x < 0 || x > 1) return 0;
+  // For large df, use normal approximation
+  if (df > 100) {
+    return normCdf(t);
+  }
   
-  const beta = Math.exp(
-    Math.log(x) * a + 
-    Math.log(1 - x) * b - 
-    Math.log(a + b) + 
-    Math.log(gamma(a + b)) - 
-    Math.log(gamma(a)) - 
-    Math.log(gamma(b))
-  );
+  // Hill's approximation for t-distribution CDF
+  const x2 = t * t;
+  const c4 = df / 4;
+  const c6 = df / 6;
   
-  return t > 0 ? 1 - 0.5 * beta : 0.5 * beta;
+  // Improved series approximation
+  const term1 = 1 + x2 / df;
+  const power = -(df + 1) / 2;
+  const factor = Math.pow(term1, power);
+  
+  // Use beta function relationship
+  const integralPart = 0.5 + t / Math.sqrt(Math.PI * df) * 
+    gamma((df + 1) / 2) / gamma(df / 2) * factor;
+  
+  return Math.max(0, Math.min(1, integralPart));
 };
 
 // Non-central t-distribution CDF approximation
@@ -133,34 +138,56 @@ export const nonCentralTCdf = (t: number, df: number, ncp: number): number => {
     return normCdf(t - ncp);
   }
   
-  // Improved approximation using Welch-Satterthwaite equation
-  const deltaSquared = ncp * ncp;
-  const effectiveDf = df + deltaSquared / (1 + deltaSquared / df);
-  const adjustedT = (t - ncp) * Math.sqrt(df / effectiveDf);
+  // Improved Johnson-Kotz-Balakrishnan approximation
+  const delta = ncp;
+  const tCentered = t - delta;
   
-  // Use central t-distribution with adjusted parameters
-  return tCdf(adjustedT, effectiveDf);
+  // Better approximation using moment matching
+  const variance = (df + delta * delta) / (df - 2);
+  const skewness = 2 * delta * Math.sqrt(df) / Math.pow(df - 2, 1.5);
+  
+  // Cornish-Fisher expansion
+  const standardized = tCentered / Math.sqrt(variance);
+  const correction = skewness * (standardized * standardized - 1) / 6;
+  
+  return normCdf(standardized - correction);
+};
+
+// t-distribution critical value
+export const tCritical = (alpha: number, df: number, tailType: "one" | "two" = "two"): number => {
+  const p = tailType === "two" ? 1 - alpha / 2 : 1 - alpha;
+  
+  // Approximation for t critical value using normal approximation for large df
+  if (df > 100) {
+    return normInv(p);
+  }
+  
+  // Hill's approximation for t critical values
+  const z = normInv(p);
+  const c1 = z;
+  const c2 = (z * z * z + z) / (4 * df);
+  const c3 = (5 * Math.pow(z, 5) + 16 * z * z * z + 3 * z) / (96 * df * df);
+  
+  return z + c2 + c3;
 };
 
 // F-distribution critical value approximation
 export const fCritical = (alpha: number, df1: number, df2: number): number => {
-  // Approximation for F critical value
+  // Improved approximation for F critical value
   if (df1 === 1) {
-    const tCrit = normInv(1 - alpha / 2) * Math.sqrt(df2 / (df2 - 2));
+    const tCrit = tCritical(alpha, df2, "two");
     return tCrit * tCrit;
   }
   
-  // General case approximation
-  const logAlpha = Math.log(alpha);
-  const a = 1 / (df1 - 1);
-  const b = 1 / (df2 - 1);
-  const c = a + b;
-  const d = a - b;
+  // Wilson-Hilferty approximation
+  const h1 = 2 / (9 * df1);
+  const h2 = 2 / (9 * df2);
+  const z = normInv(1 - alpha);
   
-  const p = 2 / c * (1 + d * d / 3 + d * d * d * d / 5);
-  const y = Math.pow(-logAlpha / p, 2 / df1);
+  const term1 = 1 - h2 + z * Math.sqrt(h2);
+  const term2 = 1 - h1;
   
-  return y / (1 - b * y);
+  return Math.pow(term1 / term2, 3);
 };
 
 // Non-central F-distribution CDF approximation

@@ -2,7 +2,7 @@
  * Power calculation functions for specific statistical tests
  */
 
-import { nonCentralTCdf, normInv, nonCentralFCdf, fCritical, normCdf } from './statistical-functions';
+import { nonCentralTCdf, normInv, nonCentralFCdf, fCritical, tCritical, normCdf } from './statistical-functions';
 
 // Power calculation for one-sample t-test
 export const powerOneSampleTTest = (
@@ -13,9 +13,7 @@ export const powerOneSampleTTest = (
 ): number => {
   const df = sampleSize - 1;
   const ncp = effectSize * Math.sqrt(sampleSize); // Non-centrality parameter
-  const criticalT = tailType === "two"
-    ? Math.abs(normInv(alpha / 2)) // Two-tailed test
-    : Math.abs(normInv(alpha));     // One-tailed test
+  const criticalT = tCritical(alpha, df, tailType);
   
   // Calculate power using non-central t-distribution
   if (tailType === "two") {
@@ -37,18 +35,16 @@ export const powerTwoSampleTTest = (
   const n1 = Math.floor(sampleSize / 2); // Sample size in group 1
   const n2 = sampleSize - n1;            // Sample size in group 2
   
-  // Calculate degrees of freedom (approximation for unequal sample sizes)
+  // Calculate degrees of freedom
   const df = n1 + n2 - 2;
   
-  // Calculate non-centrality parameter
+  // Calculate non-centrality parameter (Cohen's d formula)
   const ncp = effectSize * Math.sqrt((n1 * n2) / (n1 + n2)); 
   
-  // Critical value for the test
-  const criticalT = tailType === "two"
-    ? Math.abs(normInv(alpha / 2)) // Two-tailed test
-    : Math.abs(normInv(alpha));     // One-tailed test
+  // Critical value for the test using proper t-distribution
+  const criticalT = tCritical(alpha, df, tailType);
   
-  // Calculate power
+  // Calculate power using non-central t-distribution
   if (tailType === "two") {
     return 1 - (nonCentralTCdf(criticalT, df, ncp) - nonCentralTCdf(-criticalT, df, ncp));
   } else {
@@ -78,21 +74,21 @@ export const powerOneWayANOVA = (
   alpha: number,
   groups: number = 3
 ): number => {
-  // Adjust for sample size per group
-  const n = Math.floor(sampleSize / groups);
+  // Sample size per group
+  const n = sampleSize / groups;
   
   // Degrees of freedom
   const df1 = groups - 1;
   const df2 = sampleSize - groups;
   
-  // Non-centrality parameter
+  // Non-centrality parameter (lambda = n * groups * f²)
   const ncp = n * groups * effectSize * effectSize;
   
   // Critical F-value
   const criticalF = fCritical(alpha, df1, df2);
   
-  // Calculate power
-  return nonCentralFCdf(criticalF, df1, df2, ncp);
+  // Calculate power (probability of exceeding critical F)
+  return 1 - nonCentralFCdf(criticalF, df1, df2, ncp);
 };
 
 // Power calculation for correlation test
@@ -169,6 +165,8 @@ export const powerLinearRegression = (
   alpha: number,
   predictors: number = 1
 ): number => {
+  if (sampleSize <= predictors + 1) return 0.001; // Invalid sample size
+  
   // Degrees of freedom
   const df1 = predictors;
   const df2 = sampleSize - predictors - 1;
@@ -179,8 +177,8 @@ export const powerLinearRegression = (
   // Critical F-value
   const criticalF = fCritical(alpha, df1, df2);
   
-  // Calculate power
-  return nonCentralFCdf(criticalF, df1, df2, ncp);
+  // Calculate power - need to return 1 - nonCentralFCdf for correct power
+  return 1 - nonCentralFCdf(criticalF, df1, df2, ncp);
 };
 
 // Power calculation for multiple regression
