@@ -1,12 +1,13 @@
 
 import { PowerCalculator } from "@/components/PowerCalculator";
 import { PowerInformation } from "@/components/PowerInformation";
-import { PowerAnalysisGuide } from "@/components/documentation/PowerAnalysisGuide";
+import { PowerAnalysisGuideSimple } from "@/components/documentation/PowerAnalysisGuideSimple";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const [showInfo, setShowInfo] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
@@ -25,13 +26,20 @@ const Index = () => {
           <p className="text-center text-gray-600 mt-2">
             A tool by <a href="https://www.socr.umich.edu/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">SOCR</a> for calculating statistical power, sample size, effect size, and significance level
           </p>
-          <div className="flex justify-center mt-4">
+          <div className="flex justify-center gap-4 mt-4">
             <Button 
               variant="outline"
               onClick={() => setShowInfo(!showInfo)}
               className="bg-blue-50 hover:bg-blue-100"
             >
-              {showInfo ? "Hide Information" : "Show Information About Power Analysis"}
+              {showInfo ? "Hide Basic Info" : "Show Basic Info"}
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => setShowGuide(!showGuide)}
+              className="bg-green-50 hover:bg-green-100"
+            >
+              {showGuide ? "Hide Comprehensive Guide" : "Show Comprehensive Guide"}
             </Button>
           </div>
         </div>
@@ -39,6 +47,7 @@ const Index = () => {
       <main className="py-8">
         {showInfo && <PowerInformation />}
         <PowerCalculator />
+        {showGuide && <PowerAnalysisGuideSimple />}
       </main>
       <footer className="py-6 border-t bg-white">
         <div className="container mx-auto text-center text-gray-500">
