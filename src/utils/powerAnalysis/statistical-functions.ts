@@ -220,44 +220,38 @@ export const fCritical = (alpha: number, df1: number, df2: number): number => {
   return Math.max(0.001, result * (1 + correction));
 };
 
-// Non-central F-distribution CDF using improved Patnaik approximation
+// Non-central F-distribution CDF using simplified but accurate approximation
 export const nonCentralFCdf = (f: number, df1: number, df2: number, ncp: number): number => {
   // Handle edge cases
   if (f <= 0) return 0;
   if (df1 <= 0 || df2 <= 0) return 0;
   if (Math.abs(ncp) < 1e-10) {
-    // Central F-distribution - use beta distribution relationship
-    const x = (df1 * f) / (df1 * f + df2);
-    // Simplified approximation for central F
-    const z = (x - 0.5) / Math.sqrt(x * (1 - x) / Math.min(df1, df2));
+    // Central F-distribution - use simpler approximation
+    const z = (f - 1) / Math.sqrt(2 / df1 + 2 / df2);
     return normCdf(z);
   }
   
-  // Improved approximation for non-central F distribution
-  // Using method from Johnson & Kotz
-  const lambda = ncp;
+  console.log(`NonCentralF Debug: f=${f}, df1=${df1}, df2=${df2}, ncp=${ncp}`);
   
-  // Apply Patnaik's chi-square approximation
-  const h = 1 - (2 * (df1 + lambda)) / (3 * (df1 + 2 * lambda));
-  const effectiveDf = Math.pow(df1 + lambda, 2) / (df1 + 2 * lambda);
-  
-  // Transform F to chi-square
+  // Use the classical approximation based on chi-square
+  // Transform to non-central chi-square: X = F * df1 ~ χ²(df1, ncp)
   const chiSq = f * df1;
-  const scaledChi = chiSq / h;
   
-  // Calculate parameters for non-central chi-square approximation
-  const ncpAdjusted = lambda / h;
-  const mean = effectiveDf + ncpAdjusted;
-  const variance = 2 * effectiveDf + 4 * ncpAdjusted;
+  // For non-central chi-square with ncp and df1 degrees of freedom:
+  // Mean = df1 + ncp, Variance = 2*df1 + 4*ncp
+  const mean = df1 + ncp;
+  const variance = 2 * df1 + 4 * ncp;
   
   if (variance <= 0) {
-    return f > 1 ? 0.95 : 0.05; // Reasonable fallback
+    console.log("NonCentralF Debug: variance <= 0, returning fallback");
+    return f > 1 ? 0.95 : 0.05;
   }
   
-  // Use Wilson-Hilferty transformation for better accuracy
-  const cubicMean = Math.pow(mean, 1/3);
-  const cubicVar = variance / (9 * Math.pow(mean, 2/3));
-  const transformed = (Math.pow(scaledChi, 1/3) - cubicMean) / Math.sqrt(cubicVar);
+  // Normal approximation to non-central chi-square
+  const z = (chiSq - mean) / Math.sqrt(variance);
+  const result = 1 - normCdf(z);
   
-  return 1 - normCdf(transformed);
+  console.log(`NonCentralF Debug: chiSq=${chiSq}, mean=${mean}, variance=${variance}, z=${z}, result=${result}`);
+  
+  return Math.max(0.001, Math.min(0.999, result));
 };

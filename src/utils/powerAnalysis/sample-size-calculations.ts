@@ -74,14 +74,18 @@ export const calculateScientificSampleSize = (params: PowerParameters): number |
       const alpha = params.significanceLevel;
       const power = params.power;
       
-      // Use standard Cohen's formula for ANOVA sample size
+      // Use corrected Cohen's formula for ANOVA sample size
       const zAlpha = normInv(1 - alpha);
       const zBeta = normInv(power);
       
-      // Cohen's formula: n per group = (zα + zβ)² / f²
+      // For ANOVA: ncp = n_per_group * f², and we need (zα + zβ)² = ncp
+      // So: n_per_group = (zα + zβ)² / f²
       const nPerGroup = Math.pow((zAlpha + zBeta) / f, 2);
       const totalN = Math.ceil(nPerGroup) * groups;
       
+      console.log(`ANOVA Sample Size Debug: f=${f}, groups=${groups}, nPerGroup=${nPerGroup}, totalN=${totalN}`);
+      
+      // Return total sample size
       return Math.max(groups * 4, totalN);
     }
 

@@ -79,30 +79,33 @@ export const powerPairedTTest = (
   return powerOneSampleTTest(sampleSize, adjustedEffectSize, alpha, tailType);
 };
 
-// Power calculation for one-way ANOVA
-export const powerOneWayANOVA = (
-  sampleSize: number, // Total sample size (not per group)
-  effectSize: number, // Cohen's f
-  alpha: number,
-  groups: number = 3
-): number => {
+/**
+ * One-way ANOVA power calculation (Cohen's f)
+ */
+export const powerOneWayANOVA = (sampleSize: number, effectSize: number, alpha: number, groups: number = 3): number => {
   if (sampleSize <= 1 || effectSize < 0 || alpha <= 0 || alpha >= 1 || groups < 2) {
     return 0;
   }
 
-  // Sample size per group
-  const nPerGroup = sampleSize / groups;
+  console.log(`ANOVA Debug: n=${sampleSize}, f=${effectSize}, α=${alpha}, groups=${groups}`);
+
+  // Total sample size interpretation (most common in power analysis)
   const totalN = sampleSize;
+  const nPerGroup = totalN / groups;
   const df1 = groups - 1;
   const df2 = totalN - groups;
   
-  // Correct non-centrality parameter for ANOVA (Cohen's f)
-  // ncp = N * f^2 where N is total sample size
-  const ncp = totalN * effectSize * effectSize;
+  // CORRECT: Non-centrality parameter for ANOVA is λ = n_per_group * f²
+  // Based on Cohen's conventions and G*Power formulation
+  const ncp = nPerGroup * effectSize * effectSize;
   const fCrit = fCritical(alpha, df1, df2);
+  
+  console.log(`ANOVA Debug: totalN=${totalN}, nPerGroup=${nPerGroup}, df1=${df1}, df2=${df2}, ncp=${ncp}, fCrit=${fCrit}`);
   
   // Power = P(F > F_crit | H1)
   const power = 1 - nonCentralFCdf(fCrit, df1, df2, ncp);
+  
+  console.log(`ANOVA Debug: power=${power}`);
   
   return Math.max(0.001, Math.min(0.999, power));
 };
@@ -230,16 +233,15 @@ export const powerLinearRegression = (
   return 1 - nonCentralFCdf(criticalF, df1, df2, ncp);
 };
 
-// Power calculation for multiple regression
-export const powerMultipleRegression = (
-  sampleSize: number,
-  effectSize: number, // Cohen's f²
-  alpha: number,
-  predictors: number = 3
-): number => {
+/**
+ * Multiple regression power calculation (Cohen's f²)
+ */
+export const powerMultipleRegression = (sampleSize: number, effectSize: number, alpha: number, predictors: number = 3): number => {
   if (sampleSize <= predictors + 1 || effectSize < 0 || alpha <= 0 || alpha >= 1) {
     return 0;
   }
+
+  console.log(`Regression Debug: n=${sampleSize}, f²=${effectSize}, α=${alpha}, predictors=${predictors}`);
 
   const df1 = predictors;
   const df2 = sampleSize - predictors - 1;
@@ -249,8 +251,12 @@ export const powerMultipleRegression = (
   const ncp = sampleSize * effectSize;
   const fCrit = fCritical(alpha, df1, df2);
   
+  console.log(`Regression Debug: df1=${df1}, df2=${df2}, ncp=${ncp}, fCrit=${fCrit}`);
+  
   // Power = P(F > F_crit | H1)
   const power = 1 - nonCentralFCdf(fCrit, df1, df2, ncp);
+  
+  console.log(`Regression Debug: power=${power}`);
   
   return Math.max(0.001, Math.min(0.999, power));
 };
