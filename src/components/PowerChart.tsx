@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { PowerParameters } from "@/types/power-analysis";
 import { ChartControls } from "@/components/ChartControls";
-import { Power3DPlot } from "@/components/Power3DPlot";
+import { Power3DPlot } from "@/components/Power3DPlotOptimized";
 import { ChartFullscreenButton } from "@/components/charts/ChartFullscreenButton";
 import { PowerCurveChart } from "@/components/charts/PowerCurveChart";
 import { generateChartData, getChartConfiguration } from "@/components/charts/PowerChartGenerator";

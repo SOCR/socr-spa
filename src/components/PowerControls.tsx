@@ -11,7 +11,7 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { PowerParameters } from "@/types/power-analysis";
-import { EFFECT_SIZE_MAP } from "@/utils/power-calculations";
+import { EFFECT_SIZE_MAP } from "@/utils/powerAnalysis";
 
 interface PowerControlsProps {
   targetParameter: keyof Omit<PowerParameters, "test">;

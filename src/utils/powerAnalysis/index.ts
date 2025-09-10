@@ -9,6 +9,7 @@
  */
 
 import { PowerParameters } from "@/types/power-analysis";
+export { EFFECT_SIZE_MAP } from "./effect-size-map";
 import { 
   powerOneSampleTTest,
   powerTwoSampleTTest,
