@@ -2,6 +2,7 @@
 import { PowerCalculator } from "@/components/PowerCalculator";
 import { PowerInformation } from "@/components/PowerInformation";
 import { PowerAnalysisGuideSimple } from "@/components/documentation/PowerAnalysisGuideSimple";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
@@ -45,9 +46,11 @@ const Index = () => {
         </div>
       </header>
       <main className="py-8">
-        {showInfo && <PowerInformation />}
-        <PowerCalculator />
-        {showGuide && <PowerAnalysisGuideSimple />}
+        <ErrorBoundary fallbackMessage="Error loading application components. Please refresh the page.">
+          {showInfo && <PowerInformation />}
+          <PowerCalculator />
+          {showGuide && <PowerAnalysisGuideSimple />}
+        </ErrorBoundary>
       </main>
       <footer className="py-6 border-t bg-white">
         <div className="container mx-auto text-center text-gray-500">

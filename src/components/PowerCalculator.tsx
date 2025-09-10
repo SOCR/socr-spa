@@ -14,6 +14,7 @@ import { PowerValidationSystem } from "@/components/validation/PowerValidationSy
 import { PowerAnalysisTestSuite } from "@/components/testing/PowerAnalysisTestSuite";
 import { PowerInstructions } from "@/components/PowerInstructions";
 import { TestFormulas } from "@/components/TestFormulas";
+import { CalculationValidator } from "@/components/CalculationValidator";
 
 export function PowerCalculator() {
   const [targetParameter, setTargetParameter] = useState<keyof Omit<PowerParameters, "test">>("sampleSize");
@@ -162,6 +163,12 @@ export function PowerCalculator() {
                 targetParameter={targetParameter}
                 value={calculatedValue}
                 params={params}
+              />
+              
+              <CalculationValidator
+                params={params}
+                calculatedValue={calculatedValue}
+                targetParameter={targetParameter}
               />
             </div>
           </div>
