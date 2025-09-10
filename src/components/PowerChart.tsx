@@ -77,12 +77,12 @@ export function PowerChart({ params, targetParameter }: PowerChartProps) {
       <ErrorBoundary fallbackMessage="Error rendering 3D chart. Please ensure you have selected a valid statistical test and try again.">
         <div className="space-y-4">
           <h3 className="text-lg font-medium">3D Power Analysis Surface</h3>
-          <div className="h-80 border rounded-md bg-white p-2">
+          <div className="h-96 border rounded-md bg-white p-2 mb-6">
             <Power3DPlotOptimized params={params} />
           </div>
           <p className="text-sm text-gray-500">
-            This 3D surface shows the relationship between statistical power (X-axis), 
-            sample size (Y-axis), and effect size (Z-axis/height).
+            This 3D surface shows the relationship between sample size (X-axis), 
+            effect size (Y-axis), and statistical power (Z-axis/height).
           </p>
         </div>
       </ErrorBoundary>

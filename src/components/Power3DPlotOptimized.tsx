@@ -99,39 +99,38 @@ export function Power3DPlotOptimized({ params }: Power3DPlotProps) {
     try {
       setIsLoading(true);
       
-      // Generate arrays for power and sample size with reasonable limits
-      const powerValues = Array.from({ length: 12 }, (_, i) => 0.1 + i * 0.07); // 0.1 to 0.87
+      // Generate arrays for sample size (X-axis) and effect size (Y-axis)
       const sampleSizes = Array.from({ length: 12 }, (_, i) => 10 + i * 15); // 10 to 175
+      const effectSizes = Array.from({ length: 12 }, (_, i) => 0.1 + i * 0.15); // 0.1 to 1.75
       
-      // Initialize effect size matrix
-      const effectSizeMatrix = Array(powerValues.length).fill(null).map(() => Array(sampleSizes.length));
+      // Initialize power matrix (Z-axis)
+      const powerMatrix = Array(sampleSizes.length).fill(null).map(() => Array(effectSizes.length));
       
-      // Calculate effect sizes using direct mathematical calculation with timeout protection
+      // Calculate power values using statistical functions
       let calculationCount = 0;
-      const maxCalculations = powerValues.length * sampleSizes.length;
+      const maxCalculations = sampleSizes.length * effectSizes.length;
       const startTime = Date.now();
       const maxTime = 5000; // 5 second timeout
       
-      for (let i = 0; i < powerValues.length; i++) {
-        for (let j = 0; j < sampleSizes.length; j++) {
+      for (let i = 0; i < sampleSizes.length; i++) {
+        for (let j = 0; j < effectSizes.length; j++) {
           calculationCount++;
           
           // Timeout protection
           if (Date.now() - startTime > maxTime) {
             console.warn("3D surface calculation timeout - using default values");
-            effectSizeMatrix[i][j] = 0.5; // Default medium effect size
+            powerMatrix[i][j] = 0.8; // Default 80% power
             continue;
           }
           
-          const targetPower = powerValues[i];
-          const sampleSize = sampleSizes[j];
+          const sampleSize = sampleSizes[i];
+          const effectSize = effectSizes[j];
           
-          // Create parameters for effect size calculation with validation
+          // Create parameters for power calculation
           const calcParams = {
             ...params,
-            power: targetPower,
             sampleSize: sampleSize,
-            effectSize: null,
+            effectSize: effectSize,
             significanceLevel: params.significanceLevel || 0.05
           };
         
@@ -170,32 +169,37 @@ export function Power3DPlotOptimized({ params }: Power3DPlotProps) {
             break;
         }
         
-        // Calculate effect size using direct mathematical approach
-        const effectSize = calculateEffectSizeDirectly(calcParams);
-        effectSizeMatrix[i][j] = effectSize !== null && effectSize > 0 ? effectSize : 0.01;
+        // Calculate power using scientific power analysis
+        try {
+          const power = calculateScientificPower(calcParams);
+          powerMatrix[i][j] = power && power > 0 ? power : 0.05;
+        } catch (error) {
+          console.warn("Power calculation failed:", error);
+          powerMatrix[i][j] = 0.05; // Minimum power
+        }
       }
     }
     
     setIsLoading(false);
     
     return {
-      powerValues,
       sampleSizes,
-      effectSizeMatrix
+      effectSizes,
+      powerMatrix
     };
   } catch (error) {
     console.error("Error generating 3D surface data:", error);
     setIsLoading(false);
     
     // Return fallback data
-    const fallbackPowerValues = Array.from({ length: 5 }, (_, i) => 0.2 + i * 0.2);
     const fallbackSampleSizes = Array.from({ length: 5 }, (_, i) => 20 + i * 20);
-    const fallbackMatrix = Array(5).fill(null).map(() => Array(5).fill(0.5));
+    const fallbackEffectSizes = Array.from({ length: 5 }, (_, i) => 0.2 + i * 0.2);
+    const fallbackMatrix = Array(5).fill(null).map(() => Array(5).fill(0.8));
     
     return {
-      powerValues: fallbackPowerValues,
       sampleSizes: fallbackSampleSizes,
-      effectSizeMatrix: fallbackMatrix
+      effectSizes: fallbackEffectSizes,
+      powerMatrix: fallbackMatrix
     };
   }
   }, [params]);
@@ -203,18 +207,18 @@ export function Power3DPlotOptimized({ params }: Power3DPlotProps) {
   useEffect(() => {
     if (!surfaceData) return;
     
-    const { powerValues, sampleSizes, effectSizeMatrix } = surfaceData;
+    const { sampleSizes, effectSizes, powerMatrix } = surfaceData;
     
     // Create 3D surface plot data
     const data = [{
       type: 'surface' as const,
       x: sampleSizes,
-      y: powerValues,
-      z: effectSizeMatrix,
+      y: effectSizes,
+      z: powerMatrix,
       colorscale: 'Viridis',
       showscale: true,
       colorbar: {
-        title: 'Effect Size',
+        title: 'Statistical Power',
         titleside: 'right'
       },
       contours: {
@@ -238,11 +242,11 @@ export function Power3DPlotOptimized({ params }: Power3DPlotProps) {
           titlefont: { size: isFullScreen ? 16 : 12 }
         },
         yaxis: { 
-          title: 'Statistical Power',
+          title: 'Effect Size',
           titlefont: { size: isFullScreen ? 16 : 12 }
         },
         zaxis: { 
-          title: 'Effect Size',
+          title: 'Statistical Power',
           titlefont: { size: isFullScreen ? 16 : 12 }
         },
         camera: {
