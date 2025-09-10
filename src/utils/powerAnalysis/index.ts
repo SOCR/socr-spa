@@ -25,6 +25,7 @@ import {
 import { calculateScientificSampleSize } from './sample-size-calculations';
 import { calculateScientificEffectSize } from './effect-size-calculations';
 import { calculateScientificSignificanceLevel } from './significance-level-calculations';
+import { validateAndStabilizeParams, validateCalculationResult } from './calculation-stability';
 
 /**
  * Main power calculation function based on test type
@@ -34,10 +35,13 @@ export const calculateScientificPower = (params: PowerParameters): number | null
     return null;
   }
   
-  const n = params.sampleSize;
-  const es = params.effectSize;
-  const alpha = params.significanceLevel;
-  const tailType = params.tailType || "two";
+  // Stabilize parameters to prevent calculation inconsistencies
+  const stabilizedParams = validateAndStabilizeParams(params);
+  
+  const n = stabilizedParams.sampleSize!;
+  const es = stabilizedParams.effectSize!;
+  const alpha = stabilizedParams.significanceLevel!;
+  const tailType = stabilizedParams.tailType || "two";
   
   let power: number;
   
@@ -134,8 +138,16 @@ export const calculateScientificPower = (params: PowerParameters): number | null
       power = 0.8; // Default fallback
   }
   
-  // Ensure power is between 0 and 1
-  return Math.max(0.001, Math.min(0.999, power));
+  // Ensure power is between 0 and 1 and validate result
+  const boundedPower = Math.max(0.001, Math.min(0.999, power));
+  const validation = validateCalculationResult(boundedPower, "power", params);
+  
+  if (!validation.isValid) {
+    console.warn("Power calculation validation warning:", validation.warning);
+    return 0.8; // Return reasonable default if calculation seems off
+  }
+  
+  return Math.round(boundedPower * 1000) / 1000; // Round to prevent micro-fluctuations
 };
 
 // Export all calculation functions

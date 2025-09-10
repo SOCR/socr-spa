@@ -49,20 +49,28 @@ export const usePowerCalculation = (
           break;
       }
       
-      // Validate and bound the result
-      if (result !== null) {
+      // Validate and bound the result with stability checks
+      if (result !== null && !isNaN(result) && isFinite(result)) {
         switch (targetParameter) {
           case "power":
           case "significanceLevel":
             result = Math.max(0.001, Math.min(0.999, result));
+            // Add stability - round to 3 decimal places to prevent micro-fluctuations
+            result = Math.round(result * 1000) / 1000;
             break;
           case "sampleSize":
             result = Math.max(4, Math.round(result));
+            // Add stability buffer for sample size calculations
+            if (result > 10000) result = 10000; // Cap at reasonable max
             break;
           case "effectSize":
             result = Math.max(0.01, Math.min(5.0, result));
+            // Add stability - round to 3 decimal places
+            result = Math.round(result * 1000) / 1000;
             break;
         }
+      } else {
+        result = null; // Invalid calculation result
       }
       
       setCalculatedValue(result);

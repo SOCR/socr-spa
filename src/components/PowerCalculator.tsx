@@ -131,15 +131,17 @@ export function PowerCalculator() {
               variant={showAdvancedValidation ? "default" : "outline"}
               onClick={() => setShowAdvancedValidation(!showAdvancedValidation)}
               size="sm"
+              className={showAdvancedValidation ? "bg-primary text-primary-foreground" : ""}
             >
-              Advanced Validation
+              {showAdvancedValidation ? "Hide" : "Show"} Advanced Validation
             </Button>
             <Button
               variant={showTestSuite ? "default" : "outline"}
               onClick={() => setShowTestSuite(!showTestSuite)}
               size="sm"
+              className={showTestSuite ? "bg-primary text-primary-foreground" : ""}
             >
-              Test Suite
+              {showTestSuite ? "Hide" : "Show"} Test Suite
             </Button>
           </div>
 

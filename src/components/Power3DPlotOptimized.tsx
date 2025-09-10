@@ -238,20 +238,43 @@ export function Power3DPlotOptimized({ params }: Power3DPlotProps) {
       },
       scene: {
         xaxis: { 
-          title: 'Sample Size',
-          titlefont: { size: isFullScreen ? 16 : 12 }
+          title: {
+            text: 'Sample Size (n)',
+            font: { size: isFullScreen ? 16 : 12, color: '#333' }
+          },
+          showgrid: true,
+          gridcolor: '#e1e5e9',
+          showline: true,
+          linecolor: '#666',
+          tickfont: { size: isFullScreen ? 12 : 10 }
         },
         yaxis: { 
-          title: 'Effect Size',
-          titlefont: { size: isFullScreen ? 16 : 12 }
+          title: {
+            text: 'Effect Size',
+            font: { size: isFullScreen ? 16 : 12, color: '#333' }
+          },
+          showgrid: true,
+          gridcolor: '#e1e5e9',
+          showline: true,
+          linecolor: '#666',
+          tickfont: { size: isFullScreen ? 12 : 10 }
         },
         zaxis: { 
-          title: 'Statistical Power',
-          titlefont: { size: isFullScreen ? 16 : 12 }
+          title: {
+            text: 'Statistical Power',
+            font: { size: isFullScreen ? 16 : 12, color: '#333' }
+          },
+          showgrid: true,
+          gridcolor: '#e1e5e9',
+          showline: true,
+          linecolor: '#666',
+          tickfont: { size: isFullScreen ? 12 : 10 },
+          range: [0, 1]
         },
         camera: {
           eye: { x: 1.5, y: 1.5, z: 1.5 }
-        }
+        },
+        bgcolor: 'rgba(248,249,250,0.8)'
       },
       margin: { l: 0, r: 0, b: 0, t: isFullScreen ? 60 : 40 },
       autosize: true
