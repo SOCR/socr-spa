@@ -265,7 +265,7 @@ export function PowerAnalysisGuide() {
                     <Alert>
                       <AlertTriangle className="h-4 w-4" />
                       <AlertDescription>
-                        <strong>Very Small (n < 20):</strong> Limited power except for very large effects. 
+                        <strong>Very Small (n &lt; 20):</strong> Limited power except for very large effects. 
                         Consider increasing sample size or adjusting expectations.
                       </AlertDescription>
                     </Alert>
