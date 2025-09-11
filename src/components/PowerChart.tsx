@@ -77,7 +77,7 @@ export function PowerChart({ params, targetParameter }: PowerChartProps) {
       <ErrorBoundary fallbackMessage="Error rendering 3D chart. Please ensure you have selected a valid statistical test and try again.">
         <div className="space-y-4">
           <h3 className="text-lg font-medium">3D Power Analysis Surface</h3>
-          <div className="h-96 border rounded-md bg-white p-2 mb-6">
+          <div className="h-[600px] border rounded-md bg-white p-2 mb-6 overflow-hidden">
             <Power3DPlotOptimized params={params} />
           </div>
           <p className="text-sm text-gray-500">
