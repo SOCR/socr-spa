@@ -169,12 +169,27 @@ export function Power3DPlotOptimized({ params }: Power3DPlotProps) {
             break;
         }
         
-        // Calculate power using scientific power analysis
+        // Calculate power using scientific power analysis - ensure proper parameter handling
         try {
-          const power = goldStandardPower(calcParams);
-          powerMatrix[i][j] = power && power > 0 ? power : 0.05;
+          // Ensure all required parameters are properly set
+          const powerCalcParams = {
+            ...calcParams,
+            sampleSize: sampleSize,
+            effectSize: effectSize,
+            significanceLevel: calcParams.significanceLevel || 0.05,
+            power: null, // We're calculating power, so this should be null
+            tailType: calcParams.tailType || "two"
+          };
+          
+          const power = goldStandardPower(powerCalcParams);
+          // Ensure power is within valid range
+          if (power && power >= 0 && power <= 1) {
+            powerMatrix[i][j] = power;
+          } else {
+            powerMatrix[i][j] = 0.05; // Minimum power for invalid calculations
+          }
         } catch (error) {
-          console.warn("Power calculation failed:", error);
+          console.warn(`Power calculation failed for ${params.test} at n=${sampleSize}, d=${effectSize}:`, error);
           powerMatrix[i][j] = 0.05; // Minimum power
         }
       }
@@ -210,11 +225,18 @@ export function Power3DPlotOptimized({ params }: Power3DPlotProps) {
     const { sampleSizes, effectSizes, powerMatrix } = surfaceData;
     
       // Create 3D surface plot data - FIX AXIS ORIENTATION
-      // Debug matrix structure to fix inverted power relationship
-      console.log('3D Plot Debug:', { 
+      // Debug matrix structure - verify power increases with effect size
+      console.log(`3D Plot Debug for ${params.test}:`, { 
         sampleSizes: sampleSizes.slice(0, 3), 
         effectSizes: effectSizes.slice(0, 3), 
-        powerMatrix: powerMatrix.slice(0, 3).map(row => row.slice(0, 3))
+        powerMatrix: powerMatrix.slice(0, 3).map(row => row.slice(0, 3)),
+        testType: params.test,
+        additionalParams: {
+          groups: params.groups,
+          predictors: params.predictors,
+          correlation: params.correlation,
+          tailType: params.tailType
+        }
       });
       
       const data = [{
