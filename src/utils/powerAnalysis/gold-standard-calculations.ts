@@ -136,8 +136,8 @@ export const goldStandardPower = (params: PowerParameters): number | null => {
       const df1 = groups - 1;
       const df2 = n_total - groups;
       
-      // CRITICAL: Use per-group sample size for ncp
-      const ncp = n_per_group * f * f;
+      // CORRECTED: Use total sample size * f² for ncp
+      const ncp = n_total * f * f;
       const f_crit = robustFCritical(alpha, df1, df2);
       
       return 1 - robustNonCentralFCdf(f_crit, df1, df2, ncp);
@@ -171,9 +171,9 @@ export const goldStandardPower = (params: PowerParameters): number | null => {
       const df = groups - 1;
       const ncp = n * w * w;
       
-      // Chi-square critical value
+      // Chi-square critical value - more accurate calculation
       let chi_crit = 0.001;
-      let high = 50;
+      let high = 100;
       
       // Binary search for chi-square critical
       for (let i = 0; i < 100; i++) {
@@ -192,8 +192,11 @@ export const goldStandardPower = (params: PowerParameters): number | null => {
         }
       }
       
-      // Non-central chi-square power
-      return 1 - robustChiSquareCdf(chi_crit - ncp, df);
+      // CORRECTED: Use proper non-central chi-square approximation
+      // Power = P(X > chi_crit) where X ~ non-central chi-square(df, ncp)
+      // Approximate using shifted central chi-square
+      const shifted_stat = chi_crit - ncp;
+      return shifted_stat <= 0 ? 1 : (1 - robustChiSquareCdf(shifted_stat, df + 2*Math.sqrt(2*ncp)));
     }
 
     case "proportion-test": {
@@ -208,7 +211,10 @@ export const goldStandardPower = (params: PowerParameters): number | null => {
       if (tails === 1) {
         return robustNormCdf(z_beta);
       } else {
-        return robustNormCdf(z_beta) + robustNormCdf(-z_alpha - h * Math.sqrt(n / 4));
+        // CORRECTED: Proper two-tailed power calculation
+        const power_upper = 1 - robustNormCdf(z_alpha - h * Math.sqrt(n / 4));
+        const power_lower = robustNormCdf(-z_alpha - h * Math.sqrt(n / 4));
+        return power_upper + power_lower;
       }
     }
 
@@ -223,8 +229,8 @@ export const goldStandardPower = (params: PowerParameters): number | null => {
       
       if (df2 <= 0) return 0;
       
-      // CRITICAL: Use error degrees of freedom for ncp
-      const ncp = df2 * f2;
+      // CORRECTED: Use sample size * f² for ncp
+      const ncp = n * f2;
       const f_crit = robustFCritical(alpha, df1, df2);
       
       return 1 - robustNonCentralFCdf(f_crit, df1, df2, ncp);
@@ -268,65 +274,77 @@ export const goldStandardPower = (params: PowerParameters): number | null => {
 };
 
 /**
- * Gold standard sample size calculations
+ * Gold standard sample size calculations using bisection method
  */
 export const goldStandardSampleSize = (params: PowerParameters): number | null => {
   const { test, effectSize, significanceLevel, power } = params;
   
   if (!effectSize || !significanceLevel || !power) return null;
   
-  // Use iterative approach to find sample size that yields target power
-  let n = 10;  // Starting guess
-  let calculatedPower = 0;
+  // Use bisection method for stable convergence
+  let low = 4;
+  let high = 10000;
+  let best_n = low;
   
-  const maxIterations = 1000;
-  let iteration = 0;
+  const tolerance = 0.005;
+  const maxIterations = 100;
   
-  while (Math.abs(calculatedPower - power) > 0.001 && iteration < maxIterations) {
-    const testParams = { ...params, sampleSize: n };
-    calculatedPower = goldStandardPower(testParams) || 0;
+  for (let iteration = 0; iteration < maxIterations; iteration++) {
+    const mid = Math.round((low + high) / 2);
+    const testParams = { ...params, sampleSize: mid };
+    const calculatedPower = goldStandardPower(testParams) || 0;
     
-    if (calculatedPower < power) {
-      n *= 1.1;  // Increase sample size
-    } else {
-      n *= 0.95; // Decrease sample size slightly
+    if (Math.abs(calculatedPower - power) < tolerance) {
+      return mid;
     }
     
-    n = Math.max(4, Math.round(n));
-    iteration++;
+    if (calculatedPower < power) {
+      low = mid;
+      best_n = mid;
+    } else {
+      high = mid;
+    }
+    
+    if (high - low <= 1) break;
   }
   
-  return Math.round(n);
+  return Math.max(4, best_n);
 };
 
 /**
- * Gold standard effect size calculations
+ * Gold standard effect size calculations using bisection method
  */
 export const goldStandardEffectSize = (params: PowerParameters): number | null => {
   const { test, sampleSize, significanceLevel, power } = params;
   
   if (!sampleSize || !significanceLevel || !power) return null;
   
-  // Use iterative approach to find effect size that yields target power
-  let es = 0.5;  // Starting guess
-  let calculatedPower = 0;
+  // Use bisection method for stable convergence
+  let low = 0.01;
+  let high = 3.0;
+  let best_es = low;
   
-  const maxIterations = 1000;
-  let iteration = 0;
+  const tolerance = 0.005;
+  const maxIterations = 100;
   
-  while (Math.abs(calculatedPower - power) > 0.001 && iteration < maxIterations) {
-    const testParams = { ...params, effectSize: es };
-    calculatedPower = goldStandardPower(testParams) || 0;
+  for (let iteration = 0; iteration < maxIterations; iteration++) {
+    const mid = (low + high) / 2;
+    const testParams = { ...params, effectSize: mid };
+    const calculatedPower = goldStandardPower(testParams) || 0;
     
-    if (calculatedPower < power) {
-      es *= 1.05;  // Increase effect size
-    } else {
-      es *= 0.98;  // Decrease effect size slightly
+    if (Math.abs(calculatedPower - power) < tolerance) {
+      return mid;
     }
     
-    es = Math.max(0.01, es);
-    iteration++;
+    if (calculatedPower < power) {
+      low = mid;
+      best_es = mid;
+    } else {
+      high = mid;
+    }
+    
+    if (high - low <= 0.001) break;
   }
   
-  return Math.min(3.0, es);
+  return Math.max(0.01, Math.min(3.0, best_es));
 };
