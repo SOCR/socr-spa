@@ -39,32 +39,59 @@ export function PowerAnalysisTestSuite() {
       id: "ttest-power-medium",
       name: "T-Test Power (Medium Effect)",
       description: "Two-sample t-test with medium effect size (d=0.5), n=128, α=0.05",
-      ...getAccurateTestCase("ttest-power-medium")!
+      params: {
+        test: "ttest-two-sample",
+        sampleSize: 128,
+        effectSize: 0.5,
+        significanceLevel: 0.05,
+        power: null,
+        tailType: "two"
+      },
+      expectedResults: { power: 0.800 },
+      tolerance: 0.05
     },
     {
       id: "ttest-sample-size",
       name: "T-Test Sample Size",
       description: "Sample size for two-sample t-test, d=0.5, power=0.8, α=0.05",
-      ...getAccurateTestCase("ttest-sample-size")!
+      params: {
+        test: "ttest-two-sample",
+        sampleSize: null,
+        effectSize: 0.5,
+        significanceLevel: 0.05,
+        power: 0.8,
+        tailType: "two"
+      },
+      expectedResults: { sampleSize: 128 },
+      tolerance: 0.15
     },
     {
       id: "ttest-one-sample-power",
       name: "One-Sample T-Test Power",
       description: "One-sample t-test with d=0.5, n=27, α=0.05",
-      ...getAccurateTestCase("ttest-one-sample-power")!
+      params: {
+        test: "ttest-one-sample",
+        sampleSize: 27,
+        effectSize: 0.5,
+        significanceLevel: 0.05,
+        power: null,
+        tailType: "two"
+      },
+      expectedResults: { power: 0.700 },
+      tolerance: 0.05
     },
     {
       id: "ttest-paired-power",
       name: "Paired T-Test Power",
       description: "Paired t-test with d=0.5, n=34, α=0.05, r=0.5",
       params: {
-        test: "ttest-paired" as StatisticalTest,
+        test: "ttest-paired",
         sampleSize: 34,
         effectSize: 0.5,
         significanceLevel: 0.05,
         power: null,
         correlation: 0.5,
-        tailType: "two" as const
+        tailType: "two"
       },
       expectedResults: { power: 0.75 },
       tolerance: 0.05
@@ -73,49 +100,121 @@ export function PowerAnalysisTestSuite() {
       id: "correlation-power",
       name: "Correlation Power",
       description: "Correlation test with r=0.3, n=84, α=0.05, two-tailed",
-      ...getAccurateTestCase("correlation-power")!
+      params: {
+        test: "correlation",
+        sampleSize: 84,
+        effectSize: 0.3,
+        significanceLevel: 0.05,
+        power: null,
+        tailType: "two"
+      },
+      expectedResults: { power: 0.800 },
+      tolerance: 0.05
     },
     {
       id: "anova-power",
       name: "ANOVA Power",
       description: "One-way ANOVA with f=0.25, n=180, α=0.05, 4 groups",
-      ...getAccurateTestCase("anova-power")!
+      params: {
+        test: "anova",
+        sampleSize: 180,
+        effectSize: 0.25,
+        significanceLevel: 0.05,
+        power: null,
+        groups: 4
+      },
+      expectedResults: { power: 0.800 },
+      tolerance: 0.05
     },
     {
       id: "anova-sample-size",
       name: "ANOVA Sample Size",
       description: "One-way ANOVA, f=0.25, power=0.8, α=0.05, 4 groups",
-      ...getAccurateTestCase("anova-sample-size")!
+      params: {
+        test: "anova",
+        sampleSize: null,
+        effectSize: 0.25,
+        significanceLevel: 0.05,
+        power: 0.8,
+        groups: 4
+      },
+      expectedResults: { sampleSize: 180 },
+      tolerance: 0.2
     },
     {
       id: "chi-square-power",
       name: "Chi-Square Power",
       description: "Chi-square test with w=0.3, n=88, α=0.05, df=2",
-      ...getAccurateTestCase("chi-square-power")!
+      params: {
+        test: "chi-square-gof",
+        sampleSize: 88,
+        effectSize: 0.3,
+        significanceLevel: 0.05,
+        power: null,
+        groups: 3
+      },
+      expectedResults: { power: 0.800 },
+      tolerance: 0.05
     },
     {
       id: "proportion-power",
       name: "Proportion Test Power",
       description: "Proportion test with h=0.5, n=32, α=0.05",
-      ...getAccurateTestCase("proportion-power")!
+      params: {
+        test: "proportion-test",
+        sampleSize: 32,
+        effectSize: 0.5,
+        significanceLevel: 0.05,
+        power: null,
+        tailType: "two"
+      },
+      expectedResults: { power: 0.800 },
+      tolerance: 0.05
     },
     {
       id: "regression-power",
       name: "Multiple Regression Power",
       description: "Multiple regression with f²=0.15, n=77, α=0.05, 3 predictors",
-      ...getAccurateTestCase("regression-power")!
+      params: {
+        test: "multiple-regression",
+        sampleSize: 77,
+        effectSize: 0.15,
+        significanceLevel: 0.05,
+        power: null,
+        predictors: 3
+      },
+      expectedResults: { power: 0.800 },
+      tolerance: 0.05
     },
     {
       id: "regression-effect-size",
       name: "Regression Effect Size",
       description: "Multiple regression, n=77, power=0.8, α=0.05, 3 predictors",
-      ...getAccurateTestCase("regression-effect-size")!
+      params: {
+        test: "multiple-regression",
+        sampleSize: 77,
+        effectSize: null,
+        significanceLevel: 0.05,
+        power: 0.8,
+        predictors: 3
+      },
+      expectedResults: { effectSize: 0.15 },
+      tolerance: 0.1
     },
     {
       id: "sem-power",
       name: "SEM Power",
       description: "SEM with RMSEA=0.08, n=158, α=0.05, df=10",
-      ...getAccurateTestCase("sem-power")!
+      params: {
+        test: "sem",
+        sampleSize: 158,
+        effectSize: 0.08,
+        significanceLevel: 0.05,
+        power: null,
+        degreesOfFreedom: 10
+      },
+      expectedResults: { power: 0.800 },
+      tolerance: 0.05
     },
     // Edge cases
     {

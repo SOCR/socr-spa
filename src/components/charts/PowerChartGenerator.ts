@@ -1,17 +1,16 @@
-
 import { PowerParameters } from "@/types/power-analysis";
 import { 
-  calculateScientificPower, 
-  calculateScientificSampleSize, 
-  calculateScientificEffectSize 
-} from "@/utils/powerAnalysis";
+  goldStandardPower,
+  goldStandardSampleSize, 
+  goldStandardEffectSize 
+} from "@/utils/powerAnalysis/gold-standard-calculations";
 
 // Helper function to generate power curve data
 export const generatePowerCurve = (params: PowerParameters, sampleSizes: number[]): Array<{sampleSize: number; power: number}> => {
   return sampleSizes.map(n => {
     const newParams = { ...params, sampleSize: n };
     newParams.power = null;
-    const calculatedPower = calculateScientificPower(newParams);
+    const calculatedPower = goldStandardPower(newParams);
     return {
       sampleSize: n,
       power: calculatedPower || 0
@@ -24,7 +23,7 @@ export const generateEffectSizeCurve = (params: PowerParameters, effectSizes: nu
   return effectSizes.map(es => {
     const newParams = { ...params, effectSize: es };
     newParams.power = null;
-    const calculatedPower = calculateScientificPower(newParams);
+    const calculatedPower = goldStandardPower(newParams);
     return {
       effectSize: es,
       power: calculatedPower || 0
@@ -56,7 +55,7 @@ export const generateChartData = (
       return effectSizes.map(es => {
         const newParams = { ...paramsCopy, effectSize: es };
         newParams.sampleSize = null;
-        const calculatedSampleSize = calculateScientificSampleSize(newParams);
+        const calculatedSampleSize = goldStandardSampleSize(newParams);
         return {
           effectSize: es,
           sampleSize: calculatedSampleSize || 0
@@ -68,7 +67,7 @@ export const generateChartData = (
       return powers.map(power => {
         const newParams = { ...paramsCopy, power: power };
         newParams.sampleSize = null;
-        const calculatedSampleSize = calculateScientificSampleSize(newParams);
+        const calculatedSampleSize = goldStandardSampleSize(newParams);
         return {
           power: power,
           sampleSize: calculatedSampleSize || 0
@@ -83,7 +82,7 @@ export const generateChartData = (
       return sampleSizes.map(n => {
         const newParams = { ...paramsCopy, sampleSize: n };
         newParams.effectSize = null;
-        const calculatedEffectSize = calculateScientificEffectSize(newParams);
+        const calculatedEffectSize = goldStandardEffectSize(newParams);
         return {
           sampleSize: n,
           effectSize: calculatedEffectSize || 0
@@ -95,7 +94,7 @@ export const generateChartData = (
       return powers.map(power => {
         const newParams = { ...paramsCopy, power: power };
         newParams.effectSize = null;
-        const calculatedEffectSize = calculateScientificEffectSize(newParams);
+        const calculatedEffectSize = goldStandardEffectSize(newParams);
         return {
           power: power,
           effectSize: calculatedEffectSize || 0

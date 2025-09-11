@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Plot from "react-plotly.js";
 import { PowerParameters } from "@/types/power-analysis";
-import { calculateScientificPower } from "@/utils/powerAnalysis";
+import { goldStandardPower } from "@/utils/powerAnalysis/gold-standard-calculations";
 import { Maximize2, Minimize2 } from "lucide-react";
 
 interface Power3DPlotProps {
@@ -171,7 +171,7 @@ export function Power3DPlotOptimized({ params }: Power3DPlotProps) {
         
         // Calculate power using scientific power analysis
         try {
-          const power = calculateScientificPower(calcParams);
+          const power = goldStandardPower(calcParams);
           powerMatrix[i][j] = power && power > 0 ? power : 0.05;
         } catch (error) {
           console.warn("Power calculation failed:", error);
