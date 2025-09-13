@@ -8,109 +8,97 @@ interface Power3DPlotProps {
   params: PowerParameters;
 }
 
+// PHASE 4: Test-specific effect size and sample size ranges
+const getTestRanges = (testType: string) => {
+  switch (testType) {
+    case "ttest-one-sample":
+    case "ttest-two-sample":
+    case "ttest-paired":
+      return {
+        effectSizes: Array.from({ length: 15 }, (_, i) => 0.1 + i * 0.12), // Cohen's d: 0.1 to 1.8
+        sampleSizes: Array.from({ length: 15 }, (_, i) => 10 + i * 15), // n: 10 to 220
+        effectSizeLabel: "Cohen's d"
+      };
+    
+    case "anova":
+    case "anova-two-way":
+      return {
+        effectSizes: Array.from({ length: 15 }, (_, i) => 0.1 + i * 0.08), // Cohen's f: 0.1 to 1.22
+        sampleSizes: Array.from({ length: 15 }, (_, i) => 20 + i * 25), // n: 20 to 370
+        effectSizeLabel: "Cohen's f"
+      };
+    
+    case "correlation":
+      return {
+        effectSizes: Array.from({ length: 15 }, (_, i) => 0.1 + i * 0.06), // r: 0.1 to 0.94
+        sampleSizes: Array.from({ length: 15 }, (_, i) => 15 + i * 20), // n: 15 to 295
+        effectSizeLabel: "Correlation (r)"
+      };
+    
+    case "multiple-regression":
+    case "linear-regression":
+      return {
+        effectSizes: Array.from({ length: 15 }, (_, i) => 0.02 + i * 0.04), // f²: 0.02 to 0.58
+        sampleSizes: Array.from({ length: 15 }, (_, i) => 20 + i * 15), // n: 20 to 230
+        effectSizeLabel: "f²"
+      };
+    
+    case "proportion-test":
+      return {
+        effectSizes: Array.from({ length: 15 }, (_, i) => 0.2 + i * 0.08), // Cohen's h: 0.2 to 1.32
+        sampleSizes: Array.from({ length: 15 }, (_, i) => 15 + i * 12), // n: 15 to 183
+        effectSizeLabel: "Cohen's h"
+      };
+    
+    case "chi-square-gof":
+    case "chi-square-contingency":
+      return {
+        effectSizes: Array.from({ length: 15 }, (_, i) => 0.1 + i * 0.06), // Cohen's w: 0.1 to 0.94
+        sampleSizes: Array.from({ length: 15 }, (_, i) => 25 + i * 20), // n: 25 to 305
+        effectSizeLabel: "Cohen's w"
+      };
+    
+    case "sem":
+      return {
+        effectSizes: Array.from({ length: 15 }, (_, i) => 0.03 + i * 0.01), // RMSEA: 0.03 to 0.17
+        sampleSizes: Array.from({ length: 15 }, (_, i) => 50 + i * 25), // n: 50 to 400
+        effectSizeLabel: "RMSEA"
+      };
+    
+    default:
+      return {
+        effectSizes: Array.from({ length: 15 }, (_, i) => 0.1 + i * 0.12),
+        sampleSizes: Array.from({ length: 15 }, (_, i) => 10 + i * 15),
+        effectSizeLabel: "Effect Size"
+      };
+  }
+};
+
 export function Power3DPlotOptimized({ params }: Power3DPlotProps) {
   const [plotData, setPlotData] = useState<any[]>([]);
   const [layout, setLayout] = useState<any>({});
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Direct effect size calculation function - moved before useMemo to fix lexical scope
-  const calculateEffectSizeDirectly = (calcParams: PowerParameters): number | null => {
-    const { test, sampleSize, power, significanceLevel, tailType } = calcParams;
-    
-    if (!sampleSize || !power || !significanceLevel) return null;
-    
-    const n = sampleSize;
-    const targetPower = power;
-    const alpha = significanceLevel;
-    
-    try {
-      let effectSize: number;
-      
-      // Direct mathematical calculation based on test type
-      switch (test) {
-        case "ttest-one-sample":
-          // Direct formula: d = (z_β - z_α) / sqrt(n)
-          const zAlpha1 = tailType === "one" ? 1.645 : 1.96;
-          const zBeta1 = -0.84; // For 80% power
-          effectSize = (zBeta1 - (-zAlpha1)) / Math.sqrt(n);
-          break;
-          
-        case "ttest-two-sample":
-          // Direct formula for two-sample t-test
-          const zAlpha2 = tailType === "one" ? 1.645 : 1.96;
-          const zBeta2 = -0.84;
-          effectSize = (zBeta2 - (-zAlpha2)) / Math.sqrt(n / 2);
-          break;
-          
-        case "correlation":
-          // Fisher's Z transformation
-          const zAlpha3 = tailType === "one" ? 1.645 : 1.96;
-          const zBeta3 = -0.84;
-          const fisherZ = (zAlpha3 + Math.abs(zBeta3)) / Math.sqrt(n - 3);
-          effectSize = Math.tanh(fisherZ); // Convert back to correlation
-          break;
-          
-        case "anova":
-          // Cohen's f calculation
-          const groups = calcParams.groups || 3;
-          const dfBetween = groups - 1;
-          const dfWithin = n - groups;
-          const fCrit = 2.5; // Approximation for F-critical
-          effectSize = Math.sqrt(fCrit * dfBetween / n);
-          break;
-          
-        case "linear-regression":
-          // f² calculation
-          const df1 = calcParams.predictors || 1;
-          const df2 = n - df1 - 1;
-          effectSize = 0.15 / (1 + 0.15); // Medium effect size approximation
-          break;
-          
-        case "multiple-regression":
-          // Multiple regression f² calculation
-          const predictors = calcParams.predictors || 3;
-          const dfError = n - predictors - 1;
-          effectSize = Math.max(0.02, 0.15 * Math.sqrt(predictors / n));
-          break;
-          
-        case "sem":
-          // RMSEA calculation
-          const df = calcParams.degreesOfFreedom || 10;
-          effectSize = Math.sqrt(2.7 / (n - 1)) * Math.sqrt(df); // Approximation
-          break;
-          
-        default:
-          // Generic approximation
-          effectSize = Math.sqrt(2.7 / Math.sqrt(n));
-      }
-      
-      return Math.max(0.01, Math.min(2.0, Math.abs(effectSize)));
-    } catch (error) {
-      console.error("Error in effect size calculation:", error);
-      return 0.5; // Default medium effect size
-    }
-  };
-
-  // Memoized surface generation for performance with error handling
+  // PHASE 4: Memoized surface generation with proper test-specific ranges
   const surfaceData = useMemo(() => {
     if (!params.test) return null;
     
     try {
       setIsLoading(true);
       
-      // Generate arrays for sample size (X-axis) and effect size (Y-axis)
-      const sampleSizes = Array.from({ length: 12 }, (_, i) => 10 + i * 15); // 10 to 175
-      const effectSizes = Array.from({ length: 12 }, (_, i) => 0.1 + i * 0.15); // 0.1 to 1.75
+      // PHASE 4: Get test-specific ranges
+      const ranges = getTestRanges(params.test);
+      const { sampleSizes, effectSizes } = ranges;
       
       // Initialize power matrix (Z-axis)
       const powerMatrix = Array(sampleSizes.length).fill(null).map(() => Array(effectSizes.length));
       
-      // Calculate power values using statistical functions
+      // Calculate power values using gold standard methods
       let calculationCount = 0;
       const maxCalculations = sampleSizes.length * effectSizes.length;
       const startTime = Date.now();
-      const maxTime = 5000; // 5 second timeout
+      const maxTime = 8000; // 8 second timeout
       
       for (let i = 0; i < sampleSizes.length; i++) {
         for (let j = 0; j < effectSizes.length; j++) {
@@ -118,8 +106,8 @@ export function Power3DPlotOptimized({ params }: Power3DPlotProps) {
           
           // Timeout protection
           if (Date.now() - startTime > maxTime) {
-            console.warn("3D surface calculation timeout - using default values");
-            powerMatrix[i][j] = 0.8; // Default 80% power
+            console.warn("3D surface calculation timeout");
+            powerMatrix[i][j] = null; // PHASE 4: Use null for failed calculations
             continue;
           }
           
@@ -127,152 +115,138 @@ export function Power3DPlotOptimized({ params }: Power3DPlotProps) {
           const effectSize = effectSizes[j];
           
           // Create parameters for power calculation
-          const calcParams = {
-            ...params,
-            sampleSize: sampleSize,
-            effectSize: effectSize,
-            significanceLevel: params.significanceLevel || 0.05
-          };
-        
-        // Apply test-specific parameter adjustments
-        switch (params.test) {
-          case "multiple-regression":
-          case "set-correlation":
-            calcParams.predictors = params.predictors || 3;
-            if (params.test === "set-correlation") {
-              calcParams.responseVariables = params.responseVariables || 2;
-            }
-            break;
-          case "anova":
-          case "anova-two-way":
-            calcParams.groups = params.groups || 3;
-            if (params.test === "anova-two-way") {
-              calcParams.observations = params.observations || 2;
-            }
-            break;
-          case "multivariate":
-            calcParams.groups = params.groups || 2;
-            calcParams.responseVariables = params.responseVariables || 2;
-            break;
-          case "sem":
-            calcParams.degreesOfFreedom = params.degreesOfFreedom || 10;
-            break;
-          case "ttest-paired":
-            calcParams.correlation = params.correlation || 0.5;
-            break;
-          case "chi-square-gof":
-          case "chi-square-contingency":
-            calcParams.groups = params.groups || 2;
-            if (params.test === "chi-square-contingency") {
-              calcParams.observations = params.observations || 2;
-            }
-            break;
-        }
-        
-        // Calculate power using scientific power analysis - ensure proper parameter handling
-        try {
-          // Create clean parameters object with proper null handling
           const powerCalcParams: PowerParameters = {
             test: params.test,
             sampleSize: sampleSize,
             effectSize: effectSize,
             significanceLevel: params.significanceLevel || 0.05,
-            power: null, // We're calculating power, so this should be null
+            power: null, // We're calculating power
             tailType: params.tailType || "two",
             // Copy test-specific parameters
-            groups: calcParams.groups,
-            predictors: calcParams.predictors,
-            responseVariables: calcParams.responseVariables,
-            degreesOfFreedom: calcParams.degreesOfFreedom,
-            correlation: calcParams.correlation,
-            observations: calcParams.observations
+            groups: params.groups,
+            predictors: params.predictors,
+            responseVariables: params.responseVariables,
+            degreesOfFreedom: params.degreesOfFreedom,
+            correlation: params.correlation,
+            observations: params.observations
           };
           
-          const power = goldStandardPower(powerCalcParams);
-          
-          // Validate power result and ensure it's reasonable
-          if (power !== null && power >= 0 && power <= 1 && !isNaN(power)) {
-            powerMatrix[i][j] = power;
-          } else {
-            // For invalid calculations, use a minimal power based on effect size
-            powerMatrix[i][j] = Math.max(0.05, Math.min(0.95, effectSize * 0.3));
+          // Calculate power using gold standard methods
+          try {
+            const power = goldStandardPower(powerCalcParams);
+            
+            // PHASE 4: Only clamp to [0,1], no heuristic fallbacks
+            if (power !== null && !isNaN(power) && isFinite(power)) {
+              powerMatrix[i][j] = Math.max(0, Math.min(1, power));
+            } else {
+              powerMatrix[i][j] = null; // Let Plotly handle gaps in the surface
+            }
+          } catch (error) {
+            console.warn(`Power calculation failed for ${params.test} at n=${sampleSize}, es=${effectSize}:`, error);
+            powerMatrix[i][j] = null; // PHASE 4: No fallback approximations
           }
-        } catch (error) {
-          console.warn(`Power calculation failed for ${params.test} at n=${sampleSize}, d=${effectSize}:`, error);
-          // Fallback: use effect size as a rough approximation
-          powerMatrix[i][j] = Math.max(0.05, Math.min(0.95, effectSize * 0.4));
         }
       }
+      
+      setIsLoading(false);
+      
+      // PHASE 4: Add current parameter marker
+      let currentMarker = null;
+      if (params.sampleSize && params.effectSize) {
+        try {
+          const currentPower = goldStandardPower({
+            ...params,
+            power: null
+          });
+          
+          if (currentPower !== null && !isNaN(currentPower)) {
+            currentMarker = {
+              x: params.sampleSize,
+              y: params.effectSize,
+              z: currentPower
+            };
+          }
+        } catch (error) {
+          console.warn("Could not calculate current marker position:", error);
+        }
+      }
+      
+      return {
+        sampleSizes,
+        effectSizes,
+        powerMatrix,
+        effectSizeLabel: ranges.effectSizeLabel,
+        currentMarker
+      };
+    } catch (error) {
+      console.error("Error generating 3D surface data:", error);
+      setIsLoading(false);
+      return null;
     }
-    
-    setIsLoading(false);
-    
-    return {
-      sampleSizes,
-      effectSizes,
-      powerMatrix
-    };
-  } catch (error) {
-    console.error("Error generating 3D surface data:", error);
-    setIsLoading(false);
-    
-    // Return fallback data
-    const fallbackSampleSizes = Array.from({ length: 5 }, (_, i) => 20 + i * 20);
-    const fallbackEffectSizes = Array.from({ length: 5 }, (_, i) => 0.2 + i * 0.2);
-    const fallbackMatrix = Array(5).fill(null).map(() => Array(5).fill(0.8));
-    
-    return {
-      sampleSizes: fallbackSampleSizes,
-      effectSizes: fallbackEffectSizes,
-      powerMatrix: fallbackMatrix
-    };
-  }
   }, [params]);
 
   useEffect(() => {
     if (!surfaceData) return;
     
-    const { sampleSizes, effectSizes, powerMatrix } = surfaceData;
+    const { sampleSizes, effectSizes, powerMatrix, effectSizeLabel, currentMarker } = surfaceData;
     
-      // Create 3D surface plot data - FIX AXIS ORIENTATION
-      // Debug matrix structure - verify power increases with effect size
-      console.log(`3D Plot Debug for ${params.test}:`, { 
-        sampleSizes: sampleSizes.slice(0, 3), 
-        effectSizes: effectSizes.slice(0, 3), 
-        powerMatrix: powerMatrix.slice(0, 3).map(row => row.slice(0, 3)),
-        testType: params.test,
-        additionalParams: {
-          groups: params.groups,
-          predictors: params.predictors,
-          correlation: params.correlation,
-          tailType: params.tailType
-        }
-      });
-      
-      const data = [{
+    // Debug logging
+    const validPowers = powerMatrix.flat().filter(p => p !== null);
+    console.log(`3D Plot Generated for ${params.test}:`, { 
+      sampleRange: [Math.min(...sampleSizes), Math.max(...sampleSizes)],
+      effectRange: [Math.min(...effectSizes), Math.max(...effectSizes)],
+      powerRange: validPowers.length > 0 ? [Math.min(...validPowers), Math.max(...validPowers)] : [null, null],
+      validCalculations: validPowers.length,
+      totalCalculations: sampleSizes.length * effectSizes.length,
+      currentMarker: currentMarker ? `n=${currentMarker.x}, es=${currentMarker.y.toFixed(3)}, power=${currentMarker.z.toFixed(3)}` : "none"
+    });
+    
+    // Create plot data array
+    const data = [
+      {
         type: 'surface' as const,
         x: sampleSizes, // X-axis: Sample Size
         y: effectSizes, // Y-axis: Effect Size  
-        z: powerMatrix, // Z-axis: Power - powerMatrix[i][j] = power for sampleSizes[i], effectSizes[j]
-      colorscale: 'Viridis',
-      showscale: true,
-      colorbar: {
-        title: 'Statistical Power',
-        titleside: 'right'
-      },
-      contours: {
-        z: {
-          show: true,
-          usecolormap: true,
-          highlightcolor: "#42f462",
-          project: { z: true }
-        }
+        z: powerMatrix, // Z-axis: Power
+        colorscale: 'Viridis',
+        showscale: true,
+        colorbar: {
+          title: 'Statistical Power',
+          titleside: 'right'
+        },
+        contours: {
+          z: {
+            show: true,
+            usecolormap: true,
+            highlightcolor: "#42f462",
+            project: { z: true }
+          }
+        },
+        name: 'Power Surface'
       }
-    }];
+    ];
+    
+    // PHASE 4: Add current parameter marker
+    if (currentMarker) {
+      data.push({
+        type: 'scatter3d' as const,
+        x: [currentMarker.x],
+        y: [currentMarker.y],
+        z: [currentMarker.z],
+        mode: 'markers' as const,
+        marker: {
+          size: 8,
+          color: 'red',
+          symbol: 'diamond'
+        },
+        name: `Current: Power=${currentMarker.z.toFixed(3)}`,
+        showlegend: true
+      } as any);
+    }
 
     const newLayout = {
       title: {
-        text: '3D Power Analysis Surface',
+        text: `3D Power Analysis: ${params.test}`,
         font: { size: isFullScreen ? 20 : 16 }
       },
       scene: {
@@ -289,7 +263,7 @@ export function Power3DPlotOptimized({ params }: Power3DPlotProps) {
         },
         yaxis: { 
           title: {
-            text: 'Effect Size',
+            text: effectSizeLabel,
             font: { size: isFullScreen ? 16 : 12, color: '#333' }
           },
           showgrid: true,
@@ -316,12 +290,19 @@ export function Power3DPlotOptimized({ params }: Power3DPlotProps) {
         bgcolor: 'rgba(248,249,250,0.8)'
       },
       margin: { l: 0, r: 0, b: 0, t: isFullScreen ? 60 : 40 },
-      autosize: true
+      autosize: true,
+      legend: {
+        x: 0.02,
+        y: 0.98,
+        bgcolor: 'rgba(255,255,255,0.8)',
+        bordercolor: '#ccc',
+        borderwidth: 1
+      }
     };
 
     setPlotData(data);
     setLayout(newLayout);
-  }, [surfaceData, isFullScreen]);
+  }, [surfaceData, isFullScreen, params.test]);
 
   const toggleFullScreen = () => {
     setIsFullScreen(!isFullScreen);

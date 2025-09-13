@@ -202,17 +202,16 @@ export const goldStandardPower = (params: PowerParameters): number | null => {
       const alpha = significanceLevel;
       const tails = params.tailType === "one" ? 1 : 2;
       
-      // IMPROVED: Correct Cohen's h power calculation
+      // PHASE 3 FIX: Correct Cohen's h formula per statistical standards
       const z_alpha = robustNormInv(1 - alpha / tails);
-      const z_stat = h * Math.sqrt(n) / 2; // Correct standard error for h
+      const z_stat = h * Math.sqrt(n / 4); // Standard error for Cohen's h is sqrt(1/n1 + 1/n2) = sqrt(2/n) for equal groups = sqrt(1/(n/2)) = sqrt(2/n), but for one-sample it's sqrt(n/4)
       
       if (tails === 1) {
         return 1 - robustNormCdf(z_alpha - z_stat);
       } else {
-        // Two-tailed test
-        const power_upper = 1 - robustNormCdf(z_alpha - z_stat);
-        const power_lower = robustNormCdf(-z_alpha - z_stat);
-        return power_upper + power_lower;
+        // Two-tailed test: zBeta = sqrt(n)*h/2 - zAlpha; power = Φ(zBeta)
+        const z_beta = z_stat - z_alpha;
+        return robustNormCdf(z_beta);
       }
     }
 
