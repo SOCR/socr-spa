@@ -293,7 +293,9 @@ function robustNonCentralFCdfPoissonMixture(f: number, df1: number, df2: number,
   // Poisson mixture: sum over Poisson probabilities
   for (let j = 0; j < maxTerms; j++) {
     const poissonProb = Math.exp(-lambda + j * Math.log(lambda) - logFactorial(j));
-    const centralF = robustFCdf(f, df1 + 2 * j, df2);
+    // CRITICAL FIX: Scale F statistic by df1/(df1 + 2*j) for correct distribution
+    const scaledF = f * df1 / (df1 + 2 * j);
+    const centralF = robustFCdf(scaledF, df1 + 2 * j, df2);
     sum += poissonProb * centralF;
     
     // Check for convergence

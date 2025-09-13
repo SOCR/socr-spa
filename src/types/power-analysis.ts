@@ -30,6 +30,7 @@ export interface PowerParameters {
   predictors?: number | null;
   responseVariables?: number | null;
   degreesOfFreedom?: number | null; // Added for SEM
+  nullRmsea?: number | null; // Added for SEM close-fit testing
 }
 
 export interface TestConfig {

@@ -238,11 +238,13 @@ export const goldStandardPower = (params: PowerParameters): number | null => {
       const n = sampleSize;
       const alpha = significanceLevel;
       const df = params.degreesOfFreedom || 10;
+      const nullRmsea = params.nullRmsea || 0; // Default to exact fit test
       
-      // IMPROVED: MacCallum et al. (1996) with correct formula
-      const ncp = (n - 1) * df * rmsea * rmsea;
+      // IMPROVED: MacCallum et al. (1996) - support both exact fit and close fit
+      const ncp_alt = (n - 1) * df * rmsea * rmsea;
+      const ncp_null = (n - 1) * df * nullRmsea * nullRmsea;
       
-      // Chi-square critical value (right-tailed test)
+      // Chi-square critical value (right-tailed test for exact fit)
       let chi_crit = 0.001;
       let high = 100;
       
@@ -262,8 +264,16 @@ export const goldStandardPower = (params: PowerParameters): number | null => {
         }
       }
       
-      // IMPROVED: Use proper non-central chi-square CDF
-      return 1 - robustNonCentralChiSquareCdf(chi_crit, df, ncp);
+      if (nullRmsea === 0) {
+        // Exact fit test: Power to reject H0: RMSEA = 0
+        return 1 - robustNonCentralChiSquareCdf(chi_crit, df, ncp_alt);
+      } else {
+        // Close fit test: Power to reject H0: RMSEA >= nullRmsea
+        // Use non-central chi-square with null hypothesis NCP
+        const prob_under_null = robustNonCentralChiSquareCdf(chi_crit, df, ncp_null);
+        const prob_under_alt = robustNonCentralChiSquareCdf(chi_crit, df, ncp_alt);
+        return prob_under_null - prob_under_alt;
+      }
     }
 
     default:

@@ -106,7 +106,7 @@ export const getAccurateTestCase = (testId: string) => {
         tolerance: 0.10,
         params: {
           test: "proportion-test" as StatisticalTest,
-          sampleSize: 32,
+          sampleSize: 128, // PHASE B FIX: Corrected for h=0.5 to achieve 0.80 power
           effectSize: 0.5,
           significanceLevel: 0.05,
           power: null,
@@ -152,7 +152,8 @@ export const getAccurateTestCase = (testId: string) => {
           effectSize: 0.08,
           significanceLevel: 0.05,
           power: null,
-          degreesOfFreedom: 10
+          degreesOfFreedom: 10,
+          nullRmsea: 0.05 // PHASE B FIX: Close-fit test (H0: RMSEA >= 0.05)
         }
       };
 

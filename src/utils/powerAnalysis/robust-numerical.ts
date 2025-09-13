@@ -160,7 +160,9 @@ export const robustNonCentralFCdf = (f: number, df1: number, df2: number, ncp: n
   // Poisson mixture: F ~ F(df1 + 2j, df2) with Poisson(λ) weights
   for (let j = 0; j < maxTerms; j++) {
     const poissonProb = Math.exp(-lambda + j * Math.log(Math.max(lambda, 1e-100)) - logFactorial(j));
-    const centralF = robustFCdf(f, df1 + 2 * j, df2);
+    // CRITICAL FIX: Scale F statistic by df1/(df1 + 2*j) for correct distribution
+    const scaledF = f * df1 / (df1 + 2 * j);
+    const centralF = robustFCdf(scaledF, df1 + 2 * j, df2);
     sum += poissonProb * centralF;
     
     // Check for convergence
