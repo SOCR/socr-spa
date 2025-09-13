@@ -144,21 +144,57 @@ export const robustFCdf = (f: number, df1: number, df2: number): number => {
 };
 
 /**
- * Robust non-central F-distribution CDF using Patnaik's approximation
+ * IMPROVED: Robust non-central F-distribution CDF using Poisson mixture method
  */
 export const robustNonCentralFCdf = (f: number, df1: number, df2: number, ncp: number): number => {
   if (Math.abs(ncp) < 1e-10) {
     return robustFCdf(f, df1, df2);
   }
   
-  // Patnaik's chi-square approximation
-  const h = ncp;
-  const df1_adj = df1 + h;
-  const k = (df1 + 2 * h) * (df1 + 2 * h) / (df1 + 4 * h);
-  const lambda = (df1 + 2 * h) / (df1 + 4 * h);
+  if (f <= 0) return 0;
   
-  const chi_stat = f * df1 / lambda;
-  return robustChiSquareCdf(chi_stat, k);
+  let sum = 0;
+  const maxTerms = 200;
+  const lambda = ncp / 2;
+  
+  // Poisson mixture: F ~ F(df1 + 2j, df2) with Poisson(λ) weights
+  for (let j = 0; j < maxTerms; j++) {
+    const poissonProb = Math.exp(-lambda + j * Math.log(Math.max(lambda, 1e-100)) - logFactorial(j));
+    const centralF = robustFCdf(f, df1 + 2 * j, df2);
+    sum += poissonProb * centralF;
+    
+    // Check for convergence
+    if (j > 10 && poissonProb < 1e-12) break;
+  }
+  
+  return Math.max(0, Math.min(1, sum));
+};
+
+/**
+ * IMPROVED: Robust non-central Chi-square CDF using Poisson mixture method
+ */
+export const robustNonCentralChiSquareCdf = (x: number, df: number, ncp: number): number => {
+  if (Math.abs(ncp) < 1e-10) {
+    return robustChiSquareCdf(x, df);
+  }
+  
+  if (x <= 0) return 0;
+  
+  let sum = 0;
+  const maxTerms = 200;
+  const lambda = ncp / 2;
+  
+  // Poisson mixture: χ² ~ χ²(df + 2j) with Poisson(λ) weights  
+  for (let j = 0; j < maxTerms; j++) {
+    const poissonProb = Math.exp(-lambda + j * Math.log(Math.max(lambda, 1e-100)) - logFactorial(j));
+    const centralChiSq = robustChiSquareCdf(x, df + 2 * j);
+    sum += poissonProb * centralChiSq;
+    
+    // Check for convergence
+    if (j > 10 && poissonProb < 1e-12) break;
+  }
+  
+  return Math.max(0, Math.min(1, sum));
 };
 
 /**
@@ -293,6 +329,18 @@ function factorial(n: number): number {
   let result = 1;
   for (let i = 2; i <= n; i++) {
     result *= i;
+  }
+  return result;
+}
+
+/**
+ * Log factorial for numerical stability in Poisson mixture calculations
+ */
+function logFactorial(n: number): number {
+  if (n < 2) return 0;
+  let result = 0;
+  for (let i = 2; i <= n; i++) {
+    result += Math.log(i);
   }
   return result;
 }

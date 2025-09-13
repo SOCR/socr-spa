@@ -2,7 +2,7 @@
  * Gold standard power analysis calculations using robust numerical methods
  */
 
-import { robustNormCdf, robustNormInv, robustTCdf, robustNonCentralTCdf, robustFCdf, robustNonCentralFCdf, robustChiSquareCdf } from './robust-numerical';
+import { robustNormCdf, robustNormInv, robustTCdf, robustNonCentralTCdf, robustFCdf, robustNonCentralFCdf, robustChiSquareCdf, robustNonCentralChiSquareCdf } from './robust-numerical';
 import { PowerParameters } from '@/types/power-analysis';
 
 /**
@@ -192,28 +192,26 @@ export const goldStandardPower = (params: PowerParameters): number | null => {
         }
       }
       
-      // CORRECTED: Use proper non-central chi-square approximation
-      // Power = P(X > chi_crit) where X ~ non-central chi-square(df, ncp)
-      // Approximate using shifted central chi-square
-      const shifted_stat = chi_crit - ncp;
-      return shifted_stat <= 0 ? 1 : (1 - robustChiSquareCdf(shifted_stat, df + 2*Math.sqrt(2*ncp)));
+      // IMPROVED: Use proper non-central chi-square CDF
+      return 1 - robustNonCentralChiSquareCdf(chi_crit, df, ncp);
     }
 
     case "proportion-test": {
-      const h = effectSize;  // Cohen's h
+      const h = effectSize;  // Cohen's h  
       const n = sampleSize;
       const alpha = significanceLevel;
       const tails = params.tailType === "one" ? 1 : 2;
       
+      // IMPROVED: Correct Cohen's h power calculation
       const z_alpha = robustNormInv(1 - alpha / tails);
-      const z_beta = h * Math.sqrt(n / 4) - z_alpha;
+      const z_stat = h * Math.sqrt(n) / 2; // Correct standard error for h
       
       if (tails === 1) {
-        return robustNormCdf(z_beta);
+        return 1 - robustNormCdf(z_alpha - z_stat);
       } else {
-        // CORRECTED: Proper two-tailed power calculation
-        const power_upper = 1 - robustNormCdf(z_alpha - h * Math.sqrt(n / 4));
-        const power_lower = robustNormCdf(-z_alpha - h * Math.sqrt(n / 4));
+        // Two-tailed test
+        const power_upper = 1 - robustNormCdf(z_alpha - z_stat);
+        const power_lower = robustNormCdf(-z_alpha - z_stat);
         return power_upper + power_lower;
       }
     }
@@ -229,8 +227,8 @@ export const goldStandardPower = (params: PowerParameters): number | null => {
       
       if (df2 <= 0) return 0;
       
-      // CORRECTED: Use sample size * f² for ncp
-      const ncp = n * f2;
+      // IMPROVED: Use (n - p - 1) * f² for non-centrality parameter
+      const ncp = df2 * f2;
       const f_crit = robustFCritical(alpha, df1, df2);
       
       return 1 - robustNonCentralFCdf(f_crit, df1, df2, ncp);
@@ -242,10 +240,10 @@ export const goldStandardPower = (params: PowerParameters): number | null => {
       const alpha = significanceLevel;
       const df = params.degreesOfFreedom || 10;
       
-      // MacCallum et al. (1996) approach
-      const ncp = n * rmsea * rmsea;
+      // IMPROVED: MacCallum et al. (1996) with correct formula
+      const ncp = (n - 1) * df * rmsea * rmsea;
       
-      // Chi-square critical value
+      // Chi-square critical value (right-tailed test)
       let chi_crit = 0.001;
       let high = 100;
       
@@ -265,7 +263,8 @@ export const goldStandardPower = (params: PowerParameters): number | null => {
         }
       }
       
-      return 1 - robustChiSquareCdf(chi_crit - ncp, df);
+      // IMPROVED: Use proper non-central chi-square CDF
+      return 1 - robustNonCentralChiSquareCdf(chi_crit, df, ncp);
     }
 
     default:

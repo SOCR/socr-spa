@@ -4,10 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { calculateScientificPower, calculateScientificSampleSize, calculateScientificEffectSize } from "@/utils/powerAnalysis";
 import { PowerParameters, StatisticalTest } from "@/types/power-analysis";
-import { CheckCircle, XCircle, Play, RefreshCw, Info } from "lucide-react";
+import { CheckCircle, XCircle, Play, RefreshCw, Info, ChevronDown } from "lucide-react";
 import { getAccurateTestCase } from './AccurateTestBaselines';
+import { computeDiagnostics, DiagnosticResults } from '@/utils/powerAnalysis/diagnostics';
 
 interface TestCase {
   id: string;
@@ -29,9 +33,11 @@ export function PowerAnalysisTestSuite() {
     expectedValue: number;
     difference: number;
     executionTime: number;
+    diagnostics?: DiagnosticResults;
   }>>({});
   const [isRunning, setIsRunning] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [showDiagnostics, setShowDiagnostics] = useState(false);
 
   // Comprehensive test cases based on ACCURATE statistical values from G*Power, R, PASS
   const testCases: TestCase[] = [
@@ -254,6 +260,7 @@ export function PowerAnalysisTestSuite() {
     expectedValue: number;
     difference: number;
     executionTime: number;
+    diagnostics?: DiagnosticResults;
   }> => {
     return new Promise((resolve) => {
       const startTime = performance.now();
@@ -277,12 +284,23 @@ export function PowerAnalysisTestSuite() {
         const difference = actualValue ? Math.abs(actualValue - expectedValue) / expectedValue : 1;
         const passed = actualValue !== null && difference <= testCase.tolerance;
         
+        // Generate diagnostics for failing tests or when diagnostics are enabled
+        let diagnostics: DiagnosticResults | undefined;
+        if (!passed || showDiagnostics) {
+          try {
+            diagnostics = computeDiagnostics(testCase.params);
+          } catch (error) {
+            console.warn("Failed to generate diagnostics:", error);
+          }
+        }
+        
         resolve({
           passed,
           actualValue,
           expectedValue,
           difference,
-          executionTime
+          executionTime,
+          diagnostics
         });
       } catch (error) {
         const executionTime = performance.now() - startTime;
@@ -291,7 +309,8 @@ export function PowerAnalysisTestSuite() {
           actualValue: null,
           expectedValue,
           difference: 1,
-          executionTime
+          executionTime,
+          diagnostics: showDiagnostics ? computeDiagnostics(testCase.params) : undefined
         });
       }
     });
@@ -331,7 +350,16 @@ export function PowerAnalysisTestSuite() {
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           Power Analysis Test Suite
-          <div className="flex gap-2">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center space-x-2">
+              <Switch 
+                id="diagnostics" 
+                checked={showDiagnostics} 
+                onCheckedChange={setShowDiagnostics}
+                disabled={isRunning}
+              />
+              <Label htmlFor="diagnostics" className="text-sm">Show Diagnostics</Label>
+            </div>
             <Button 
               onClick={runAllTests} 
               disabled={isRunning}
@@ -416,13 +444,73 @@ export function PowerAnalysisTestSuite() {
                       <div>
                         <span className="font-medium">Actual:</span> {result.actualValue?.toFixed(3) || "N/A"}
                       </div>
-                      <div>
+                       <div>
                         <span className="font-medium">Difference:</span> 
                         <span className={result.difference <= testCase.tolerance ? "text-green-600" : "text-red-600"}>
                           {(result.difference * 100).toFixed(1)}%
                         </span>
                       </div>
                     </div>
+                  )}
+                  
+                  {/* Diagnostics section for failing tests or when enabled */}
+                  {result?.diagnostics && (showDiagnostics || !result.passed) && (
+                    <Collapsible className="mt-4">
+                      <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-800">
+                        <ChevronDown className="h-4 w-4" />
+                        Diagnostic Information
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="mt-2 p-3 bg-gray-50 rounded border text-sm">
+                        <div className="space-y-2">
+                          <div><span className="font-medium">Test:</span> {result.diagnostics.testType}</div>
+                          
+                          {result.diagnostics.intermediates.degreesOfFreedom && (
+                            <div>
+                              <span className="font-medium">Degrees of Freedom:</span>
+                              {result.diagnostics.intermediates.degreesOfFreedom.df && 
+                                ` df=${result.diagnostics.intermediates.degreesOfFreedom.df}`}
+                              {result.diagnostics.intermediates.degreesOfFreedom.df1 && 
+                                ` df1=${result.diagnostics.intermediates.degreesOfFreedom.df1}`}
+                              {result.diagnostics.intermediates.degreesOfFreedom.df2 && 
+                                ` df2=${result.diagnostics.intermediates.degreesOfFreedom.df2}`}
+                            </div>
+                          )}
+                          
+                          {result.diagnostics.intermediates.noncentralityParameter !== undefined && (
+                            <div>
+                              <span className="font-medium">Non-centrality Parameter:</span> {result.diagnostics.intermediates.noncentralityParameter.toFixed(4)}
+                            </div>
+                          )}
+                          
+                          {result.diagnostics.intermediates.criticalValue !== undefined && (
+                            <div>
+                              <span className="font-medium">Critical Value:</span> {result.diagnostics.intermediates.criticalValue.toFixed(4)}
+                            </div>
+                          )}
+                          
+                          {result.diagnostics.calculations.referenceMethod !== null && (
+                            <div className="pt-2 border-t">
+                              <div><span className="font-medium">Current Method:</span> {result.diagnostics.calculations.currentMethod?.toFixed(4) || "N/A"}</div>
+                              <div><span className="font-medium">Reference Method:</span> {result.diagnostics.calculations.referenceMethod.toFixed(4)}</div>
+                              {result.diagnostics.calculations.percentDifference !== undefined && (
+                                <div><span className="font-medium">Method Difference:</span> {result.diagnostics.calculations.percentDifference.toFixed(2)}%</div>
+                              )}
+                            </div>
+                          )}
+                          
+                          {result.diagnostics.warnings.length > 0 && (
+                            <div className="pt-2 border-t">
+                              <span className="font-medium text-orange-600">Warnings:</span>
+                              <ul className="ml-4 list-disc text-orange-600">
+                                {result.diagnostics.warnings.map((warning, idx) => (
+                                  <li key={idx}>{warning}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
                   )}
                 </CardContent>
               </Card>
