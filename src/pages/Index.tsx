@@ -71,6 +71,16 @@ const Index = () => {
           <div className="mt-4 text-xs">
             <p>
               Based on established statistical methods and Cohen's effect size conventions. For research purposes only.
+              Powered by
+              <a
+                href="https://socr.umich.edu/GAIM/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline"
+              >
+                SOCR GAIM
+              </a>
+              .
             </p>
             <p>
               Always consult with a statistician for complex study designs. Also, see the{" "}
