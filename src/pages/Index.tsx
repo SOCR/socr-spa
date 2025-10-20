@@ -63,9 +63,8 @@ const Index = () => {
               rel="noopener noreferrer"
               className="text-blue-600 hover:underline"
             >
-              SOCR
+              Statistics Online Computational Resource (SOCR)
             </a>{" "}
-            (Statistics Online Computational Resource)
           </p>
           <p className="text-sm mt-2">This tool provides statistical power analysis for research design.</p>
           <div className="mt-4 text-xs">
