@@ -56,7 +56,7 @@ const Index = () => {
       <footer className="py-6 border-t bg-white">
         <div className="container mx-auto text-center text-gray-500">
           <p>
-            © 2025{" "}
+            © {new Date().getFullYear()}{" "}
             <a
               href="https://www.socr.umich.edu/"
               target="_blank"
