@@ -71,7 +71,7 @@ const Index = () => {
           <div className="mt-4 text-xs">
             <p>
               Based on established statistical methods and Cohen's effect size conventions. For research purposes only.
-              Powered by
+              Powered by{" "}
               <a
                 href="https://socr.umich.edu/GAIM/"
                 target="_blank"
