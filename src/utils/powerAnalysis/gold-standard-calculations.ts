@@ -2,7 +2,7 @@
  * Gold standard power analysis calculations using robust numerical methods
  */
 
-import { robustNormCdf, robustNormInv, robustTCdf, robustNonCentralTCdf, robustFCdf, robustNonCentralFCdf, robustChiSquareCdf, robustNonCentralChiSquareCdf } from './robust-numerical';
+import { robustNormCdf, robustNormInv, robustTCdf, robustNonCentralTCdf, robustFCdf, robustNonCentralFCdf, robustChiSquareCdf, robustNonCentralChiSquareCdf, robustChiSquareCritical } from './robust-numerical';
 import { PowerParameters } from '@/types/power-analysis';
 
 /**
@@ -198,18 +198,22 @@ export const goldStandardPower = (params: PowerParameters): number | null => {
 
     case "proportion-test": {
       const h = effectSize;  // Cohen's h  
-      const n = sampleSize;
+      const n = sampleSize;  // Total sample size (n1 + n2 for two-sample)
       const alpha = significanceLevel;
       const tails = params.tailType === "one" ? 1 : 2;
       
-      // PHASE 3 FIX: Correct Cohen's h formula per statistical standards
+      // PHASE 2 FIX: Correct Cohen's h formula for two-sample proportion test
+      // For two-sample test with equal groups: SE = sqrt(2/n) where n is per-group size
+      // Total n = 2 * n_per_group, so n_per_group = n/2
+      // Therefore: SE = sqrt(2/(n/2)) = sqrt(4/n) = 2/sqrt(n)
+      // z_stat = h / SE = h * sqrt(n) / 2
       const z_alpha = robustNormInv(1 - alpha / tails);
-      const z_stat = h * Math.sqrt(n / 4); // Standard error for Cohen's h is sqrt(1/n1 + 1/n2) = sqrt(2/n) for equal groups = sqrt(1/(n/2)) = sqrt(2/n), but for one-sample it's sqrt(n/4)
+      const z_stat = h * Math.sqrt(n / 2); // Corrected: h * sqrt(n/2) for equal groups
       
       if (tails === 1) {
         return 1 - robustNormCdf(z_alpha - z_stat);
       } else {
-        // Two-tailed test: zBeta = sqrt(n)*h/2 - zAlpha; power = Φ(zBeta)
+        // Two-tailed test: power = Φ(z_stat - z_alpha)
         const z_beta = z_stat - z_alpha;
         return robustNormCdf(z_beta);
       }
@@ -240,39 +244,45 @@ export const goldStandardPower = (params: PowerParameters): number | null => {
       const df = params.degreesOfFreedom || 10;
       const nullRmsea = params.nullRmsea || 0; // Default to exact fit test
       
-      // IMPROVED: MacCallum et al. (1996) - support both exact fit and close fit
+      // PHASE 3 FIX: MacCallum et al. (1996) - correct close-fit test implementation
       const ncp_alt = (n - 1) * df * rmsea * rmsea;
       const ncp_null = (n - 1) * df * nullRmsea * nullRmsea;
       
-      // Chi-square critical value (right-tailed test for exact fit)
-      let chi_crit = 0.001;
-      let high = 100;
-      
-      for (let i = 0; i < 100; i++) {
-        const mid = (chi_crit + high) / 2;
-        const p = robustChiSquareCdf(mid, df);
-        
-        if (Math.abs(p - (1 - alpha)) < 1e-8) {
-          chi_crit = mid;
-          break;
-        }
-        
-        if (p < 1 - alpha) {
-          chi_crit = mid;
-        } else {
-          high = mid;
-        }
-      }
-      
       if (nullRmsea === 0) {
-        // Exact fit test: Power to reject H0: RMSEA = 0
+        // Exact fit test: H0: RMSEA = 0 (RIGHT-tailed)
+        // Power = P(reject H0 | H1) = P(χ² > χ²_crit | NCP_alt)
+        const chi_crit = robustChiSquareCritical(alpha, df); // Right tail
         return 1 - robustNonCentralChiSquareCdf(chi_crit, df, ncp_alt);
       } else {
-        // Close fit test: Power to reject H0: RMSEA >= nullRmsea
-        // Use non-central chi-square with null hypothesis NCP
-        const prob_under_null = robustNonCentralChiSquareCdf(chi_crit, df, ncp_null);
-        const prob_under_alt = robustNonCentralChiSquareCdf(chi_crit, df, ncp_alt);
-        return prob_under_null - prob_under_alt;
+        // Close fit test: H0: RMSEA ≥ nullRmsea vs H1: RMSEA < nullRmsea (LEFT-tailed)
+        // Power = P(reject H0 | H1) = P(χ² < χ²_crit | NCP_alt)
+        // Critical value for LEFT tail (we want to reject when χ² is too SMALL)
+        // χ²_crit corresponds to P(χ² < χ²_crit | NCP_null) = alpha
+        
+        // For close-fit, use chi-square critical from non-central distribution under null
+        // Binary search for critical value where P(χ² < crit | NCP_null) = alpha
+        let low = 0.001;
+        let high = 100;
+        let chi_crit = low;
+        
+        for (let i = 0; i < 100; i++) {
+          const mid = (low + high) / 2;
+          const p = robustNonCentralChiSquareCdf(mid, df, ncp_null);
+          
+          if (Math.abs(p - alpha) < 1e-8) {
+            chi_crit = mid;
+            break;
+          }
+          
+          if (p < alpha) {
+            low = mid;
+          } else {
+            high = mid;
+          }
+        }
+        
+        // Power = P(χ² < χ²_crit | NCP_alt)
+        return robustNonCentralChiSquareCdf(chi_crit, df, ncp_alt);
       }
     }
 

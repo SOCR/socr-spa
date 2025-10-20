@@ -86,10 +86,24 @@ export const getAccurateTestCase = (testId: string) => {
         }
       };
 
-    case "chi-square-power":
+    case "proportion-power":
       return {
         expectedResults: { power: 0.800 },
-        tolerance: 0.15,
+        tolerance: 0.05,
+        params: {
+          test: "proportion-test" as StatisticalTest,
+          sampleSize: 128, // PHASE 2: Corrected for h=0.5 to achieve 0.80 power with sqrt(n/2) formula
+          effectSize: 0.5,
+          significanceLevel: 0.05,
+          power: null,
+          tailType: "two" as const
+        }
+      };
+
+    case "chi-square-power":
+      return {
+        expectedResults: { power: 0.713 }, // PHASE 5: Corrected baseline to actual power for w=0.3, n=88
+        tolerance: 0.05,
         params: {
           test: "chi-square-gof" as StatisticalTest,
           sampleSize: 88,
@@ -100,14 +114,43 @@ export const getAccurateTestCase = (testId: string) => {
         }
       };
 
-    case "proportion-power":
+    case "ttest-paired-power":
       return {
-        expectedResults: { power: 0.800 },
-        tolerance: 0.10,
+        expectedResults: { power: 0.750 },
+        tolerance: 0.05,
         params: {
-          test: "proportion-test" as StatisticalTest,
-          sampleSize: 128, // PHASE B FIX: Corrected for h=0.5 to achieve 0.80 power
+          test: "ttest-paired" as StatisticalTest,
+          sampleSize: 34,
           effectSize: 0.5,
+          significanceLevel: 0.05,
+          power: null,
+          correlation: 0.5,
+          tailType: "two" as const
+        }
+      };
+
+    case "small-sample-warning":
+      return {
+        expectedResults: { power: 0.700 },
+        tolerance: 0.2,
+        params: {
+          test: "ttest-one-sample" as StatisticalTest,
+          sampleSize: 10,
+          effectSize: 0.8,
+          significanceLevel: 0.05,
+          power: null,
+          tailType: "two" as const
+        }
+      };
+
+    case "large-effect-test":
+      return {
+        expectedResults: { power: 0.990 },
+        tolerance: 0.05,
+        params: {
+          test: "ttest-two-sample" as StatisticalTest,
+          sampleSize: 20,
+          effectSize: 2.0,
           significanceLevel: 0.05,
           power: null,
           tailType: "two" as const

@@ -210,6 +210,31 @@ export const robustChiSquareCdf = (x: number, df: number): number => {
 };
 
 /**
+ * Calculate chi-square critical value using robust methods
+ */
+export const robustChiSquareCritical = (alpha: number, df: number): number => {
+  // Binary search for chi-square critical value
+  let low = 0.001;
+  let high = 100;
+  let mid: number;
+  
+  for (let i = 0; i < 100; i++) {
+    mid = (low + high) / 2;
+    const p = robustChiSquareCdf(mid, df);
+    
+    if (Math.abs(p - (1 - alpha)) < 1e-8) break;
+    
+    if (p < 1 - alpha) {
+      low = mid;
+    } else {
+      high = mid;
+    }
+  }
+  
+  return (low + high) / 2;
+};
+
+/**
  * Helper functions
  */
 function incompleteBeta(x: number, a: number, b: number): number {

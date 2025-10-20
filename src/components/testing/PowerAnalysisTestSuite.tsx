@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,220 +39,100 @@ export function PowerAnalysisTestSuite() {
   const [progress, setProgress] = useState(0);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
 
-  // Comprehensive test cases based on ACCURATE statistical values from G*Power, R, PASS
-  const testCases: TestCase[] = [
-    {
-      id: "ttest-power-medium",
-      name: "T-Test Power (Medium Effect)",
-      description: "Two-sample t-test with medium effect size (d=0.5), n=128, α=0.05",
-      params: {
-        test: "ttest-two-sample",
-        sampleSize: 128,
-        effectSize: 0.5,
-        significanceLevel: 0.05,
-        power: null,
-        tailType: "two"
+  // PHASE 1: Build test cases dynamically from AccurateTestBaselines (single source of truth)
+  const testCases: TestCase[] = React.useMemo(() => {
+    const testIds = [
+      "ttest-power-medium",
+      "ttest-sample-size", 
+      "ttest-one-sample-power",
+      "ttest-paired-power",
+      "correlation-power",
+      "anova-power",
+      "anova-sample-size",
+      "chi-square-power",
+      "proportion-power",
+      "regression-power",
+      "regression-effect-size",
+      "sem-power",
+      "small-sample-warning",
+      "large-effect-test"
+    ];
+
+    const testDescriptions: Record<string, { name: string; description: string }> = {
+      "ttest-power-medium": {
+        name: "T-Test Power (Medium Effect)",
+        description: "Two-sample t-test with medium effect size (d=0.5), n=128, α=0.05"
       },
-      expectedResults: { power: 0.800 },
-      tolerance: 0.05
-    },
-    {
-      id: "ttest-sample-size",
-      name: "T-Test Sample Size",
-      description: "Sample size for two-sample t-test, d=0.5, power=0.8, α=0.05",
-      params: {
-        test: "ttest-two-sample",
-        sampleSize: null,
-        effectSize: 0.5,
-        significanceLevel: 0.05,
-        power: 0.8,
-        tailType: "two"
+      "ttest-sample-size": {
+        name: "T-Test Sample Size",
+        description: "Sample size for two-sample t-test, d=0.5, power=0.8, α=0.05"
       },
-      expectedResults: { sampleSize: 128 },
-      tolerance: 0.15
-    },
-    {
-      id: "ttest-one-sample-power",
-      name: "One-Sample T-Test Power",
-      description: "One-sample t-test with d=0.5, n=27, α=0.05",
-      params: {
-        test: "ttest-one-sample",
-        sampleSize: 27,
-        effectSize: 0.5,
-        significanceLevel: 0.05,
-        power: null,
-        tailType: "two"
+      "ttest-one-sample-power": {
+        name: "One-Sample T-Test Power",
+        description: "One-sample t-test with d=0.5, n=27, α=0.05"
       },
-      expectedResults: { power: 0.700 },
-      tolerance: 0.05
-    },
-    {
-      id: "ttest-paired-power",
-      name: "Paired T-Test Power",
-      description: "Paired t-test with d=0.5, n=34, α=0.05, r=0.5",
-      params: {
-        test: "ttest-paired",
-        sampleSize: 34,
-        effectSize: 0.5,
-        significanceLevel: 0.05,
-        power: null,
-        correlation: 0.5,
-        tailType: "two"
+      "ttest-paired-power": {
+        name: "Paired T-Test Power",
+        description: "Paired t-test with d=0.5, n=34, α=0.05, r=0.5"
       },
-      expectedResults: { power: 0.75 },
-      tolerance: 0.05
-    },
-    {
-      id: "correlation-power",
-      name: "Correlation Power",
-      description: "Correlation test with r=0.3, n=84, α=0.05, two-tailed",
-      params: {
-        test: "correlation",
-        sampleSize: 84,
-        effectSize: 0.3,
-        significanceLevel: 0.05,
-        power: null,
-        tailType: "two"
+      "correlation-power": {
+        name: "Correlation Power",
+        description: "Correlation test with r=0.3, n=84, α=0.05, two-tailed"
       },
-      expectedResults: { power: 0.800 },
-      tolerance: 0.05
-    },
-    {
-      id: "anova-power",
-      name: "ANOVA Power",
-      description: "One-way ANOVA with f=0.25, n=180, α=0.05, 4 groups",
-      params: {
-        test: "anova",
-        sampleSize: 180,
-        effectSize: 0.25,
-        significanceLevel: 0.05,
-        power: null,
-        groups: 4
+      "anova-power": {
+        name: "ANOVA Power",
+        description: "One-way ANOVA with f=0.25, n=180, α=0.05, 4 groups"
       },
-      expectedResults: { power: 0.800 },
-      tolerance: 0.05
-    },
-    {
-      id: "anova-sample-size",
-      name: "ANOVA Sample Size",
-      description: "One-way ANOVA, f=0.25, power=0.8, α=0.05, 4 groups",
-      params: {
-        test: "anova",
-        sampleSize: null,
-        effectSize: 0.25,
-        significanceLevel: 0.05,
-        power: 0.8,
-        groups: 4
+      "anova-sample-size": {
+        name: "ANOVA Sample Size",
+        description: "One-way ANOVA, f=0.25, power=0.8, α=0.05, 4 groups"
       },
-      expectedResults: { sampleSize: 180 },
-      tolerance: 0.2
-    },
-    {
-      id: "chi-square-power",
-      name: "Chi-Square Power",
-      description: "Chi-square test with w=0.3, n=88, α=0.05, df=2",
-      params: {
-        test: "chi-square-gof",
-        sampleSize: 88,
-        effectSize: 0.3,
-        significanceLevel: 0.05,
-        power: null,
-        groups: 3
+      "chi-square-power": {
+        name: "Chi-Square Power",
+        description: "Chi-square test with w=0.3, n=88, α=0.05, df=2"
       },
-      expectedResults: { power: 0.800 },
-      tolerance: 0.05
-    },
-    {
-      id: "proportion-power",
-      name: "Proportion Test Power",
-      description: "Proportion test with h=0.5, n=32, α=0.05",
-      params: {
-        test: "proportion-test",
-        sampleSize: 32,
-        effectSize: 0.5,
-        significanceLevel: 0.05,
-        power: null,
-        tailType: "two"
+      "proportion-power": {
+        name: "Proportion Test Power",
+        description: "Proportion test with h=0.5, n=128, α=0.05"
       },
-      expectedResults: { power: 0.800 },
-      tolerance: 0.05
-    },
-    {
-      id: "regression-power",
-      name: "Multiple Regression Power",
-      description: "Multiple regression with f²=0.15, n=77, α=0.05, 3 predictors",
-      params: {
-        test: "multiple-regression",
-        sampleSize: 77,
-        effectSize: 0.15,
-        significanceLevel: 0.05,
-        power: null,
-        predictors: 3
+      "regression-power": {
+        name: "Multiple Regression Power",
+        description: "Multiple regression with f²=0.15, n=77, α=0.05, 3 predictors"
       },
-      expectedResults: { power: 0.800 },
-      tolerance: 0.05
-    },
-    {
-      id: "regression-effect-size",
-      name: "Regression Effect Size",
-      description: "Multiple regression, n=77, power=0.8, α=0.05, 3 predictors",
-      params: {
-        test: "multiple-regression",
-        sampleSize: 77,
-        effectSize: null,
-        significanceLevel: 0.05,
-        power: 0.8,
-        predictors: 3
+      "regression-effect-size": {
+        name: "Regression Effect Size",
+        description: "Multiple regression, n=77, power=0.8, α=0.05, 3 predictors"
       },
-      expectedResults: { effectSize: 0.15 },
-      tolerance: 0.1
-    },
-    {
-      id: "sem-power",
-      name: "SEM Power",
-      description: "SEM with RMSEA=0.08, n=158, α=0.05, df=10",
-      params: {
-        test: "sem",
-        sampleSize: 158,
-        effectSize: 0.08,
-        significanceLevel: 0.05,
-        power: null,
-        degreesOfFreedom: 10
+      "sem-power": {
+        name: "SEM Power",
+        description: "SEM with RMSEA=0.08, n=158, α=0.05, df=10, close-fit test"
       },
-      expectedResults: { power: 0.800 },
-      tolerance: 0.05
-    },
-    // Edge cases
-    {
-      id: "small-sample-warning",
-      name: "Small Sample Edge Case",
-      description: "Very small sample size test (n=10)",
-      params: {
-        test: "ttest-one-sample",
-        sampleSize: 10,
-        effectSize: 0.8,
-        significanceLevel: 0.05,
-        power: null
+      "small-sample-warning": {
+        name: "Small Sample Edge Case",
+        description: "Very small sample size test (n=10)"
       },
-      expectedResults: { power: 0.7 },
-      tolerance: 0.2
-    },
-    {
-      id: "large-effect-test",
-      name: "Large Effect Size Test",
-      description: "Very large effect size (d=2.0)",
-      params: {
-        test: "ttest-two-sample",
-        sampleSize: 20,
-        effectSize: 2.0,
-        significanceLevel: 0.05,
-        power: null,
-        tailType: "two"
-      },
-      expectedResults: { power: 0.99 },
-      tolerance: 0.05
-    }
-  ];
+      "large-effect-test": {
+        name: "Large Effect Size Test",
+        description: "Very large effect size (d=2.0)"
+      }
+    };
+
+    return testIds.map(id => {
+      const baseline = getAccurateTestCase(id);
+      if (!baseline) {
+        throw new Error(`No baseline found for test case: ${id}`);
+      }
+      
+      return {
+        id,
+        name: testDescriptions[id]?.name || id,
+        description: testDescriptions[id]?.description || "",
+        params: baseline.params,
+        expectedResults: baseline.expectedResults,
+        tolerance: baseline.tolerance
+      };
+    });
+  }, []);
 
   const runTestCase = (testCase: TestCase): Promise<{
     passed: boolean;
