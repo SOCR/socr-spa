@@ -203,12 +203,11 @@ export const goldStandardPower = (params: PowerParameters): number | null => {
       const tails = params.tailType === "one" ? 1 : 2;
       
       // PHASE 2 FIX: Correct Cohen's h formula for two-sample proportion test
-      // For two-sample test with equal groups: SE = sqrt(2/n) where n is per-group size
-      // Total n = 2 * n_per_group, so n_per_group = n/2
+      // For two-sample test with equal groups: SE = sqrt(2/n_per_group) where n_per_group = n/2
       // Therefore: SE = sqrt(2/(n/2)) = sqrt(4/n) = 2/sqrt(n)
       // z_stat = h / SE = h * sqrt(n) / 2
       const z_alpha = robustNormInv(1 - alpha / tails);
-      const z_stat = h * Math.sqrt(n / 2); // Corrected: h * sqrt(n/2) for equal groups
+      const z_stat = h * Math.sqrt(n) / 2; // Corrected: h * sqrt(n) / 2 for equal groups
       
       if (tails === 1) {
         return 1 - robustNormCdf(z_alpha - z_stat);
