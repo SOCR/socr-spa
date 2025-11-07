@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Input } from "@/components/ui/input";
-import { Slider } from "@/components/ui/slider";
+import { SliderWithLabels } from "@/components/ui/slider-with-labels";
 import { InfoTooltip } from "@/components/InfoTooltip";
 import { 
   Select, 
@@ -57,18 +57,20 @@ export function PowerControls({
             <InfoTooltip content="The magnitude of the effect you're trying to detect. Values can be considered small, medium, or large according to Cohen's conventions." />
           </label>
           <div className="space-y-2">
-            <Slider
+            <SliderWithLabels
               value={[params.effectSize || 0]}
               min={0}
-              max={1}
+              max={Math.max(2, EFFECT_SIZE_MAP[params.test].large * 2.5)}
               step={0.01}
               onValueChange={(value) => handleParameterChange("effectSize", value[0])}
+              labels={[
+                { value: 0, label: '0' },
+                { value: EFFECT_SIZE_MAP[params.test].small, label: `Small (${EFFECT_SIZE_MAP[params.test].small})`, highlight: true },
+                { value: EFFECT_SIZE_MAP[params.test].medium, label: `Medium (${EFFECT_SIZE_MAP[params.test].medium})`, highlight: true },
+                { value: EFFECT_SIZE_MAP[params.test].large, label: `Large (${EFFECT_SIZE_MAP[params.test].large})`, highlight: true }
+              ]}
+              formatValue={(val) => val.toFixed(2)}
             />
-            <div className="flex justify-between text-xs text-muted-foreground px-1">
-              <span>Small ({EFFECT_SIZE_MAP[params.test].small})</span>
-              <span>Medium ({EFFECT_SIZE_MAP[params.test].medium})</span>
-              <span>Large ({EFFECT_SIZE_MAP[params.test].large})</span>
-            </div>
             <Input 
               type="number" 
               min="0" 
@@ -88,21 +90,20 @@ export function PowerControls({
             <InfoTooltip content="The probability of rejecting the null hypothesis when it is true (Type I error). Commonly set at 0.05 (5%)." />
           </label>
           <div className="space-y-2">
-            <Slider
+            <SliderWithLabels
               value={[params.significanceLevel || 0.05]}
               min={0.001}
               max={0.1}
               step={0.001}
-              onValueChange={(value) => {
-                console.log("Significance level changed:", value[0]);
-                handleParameterChange("significanceLevel", value[0]);
-              }}
+              onValueChange={(value) => handleParameterChange("significanceLevel", value[0])}
+              labels={[
+                { value: 0.001, label: '0.001' },
+                { value: 0.01, label: '0.01' },
+                { value: 0.05, label: '0.05', highlight: true },
+                { value: 0.1, label: '0.10' }
+              ]}
+              formatValue={(val) => val.toFixed(3)}
             />
-            <div className="flex justify-between text-xs text-muted-foreground px-1">
-              <span>0.001</span>
-              <span>0.05</span>
-              <span>0.10</span>
-            </div>
             <Input 
               type="number" 
               min="0.001" 
@@ -122,18 +123,20 @@ export function PowerControls({
             <InfoTooltip content="The probability of detecting a true effect (sensitivity). Equals 1 minus the probability of a Type II error. A value of 0.8 (80%) is commonly used." />
           </label>
           <div className="space-y-2">
-            <Slider
+            <SliderWithLabels
               value={[params.power || 0]}
               min={0.5}
               max={0.999}
               step={0.001}
               onValueChange={(value) => handleParameterChange("power", value[0])}
+              labels={[
+                { value: 0.5, label: '0.50' },
+                { value: 0.8, label: '0.80', highlight: true },
+                { value: 0.95, label: '0.95' },
+                { value: 0.99, label: '0.99' }
+              ]}
+              formatValue={(val) => val.toFixed(3)}
             />
-            <div className="flex justify-between text-xs text-muted-foreground px-1">
-              <span>0.5</span>
-              <span>0.8</span>
-              <span>0.99</span>
-            </div>
             <Input 
               type="number" 
               min="0.5" 

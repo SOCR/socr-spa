@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { Slider } from "@/components/ui/slider";
+import { SliderWithLabels, SliderLabel } from "@/components/ui/slider-with-labels";
 import { InfoTooltip } from "@/components/InfoTooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -224,23 +224,37 @@ export function PowerControlsEnhanced({
             <InfoTooltip content="The magnitude of the effect you're trying to detect. Effect sizes are standardized measures that allow comparison across different studies and contexts. Cohen's conventions provide rough guidelines for small, medium, and large effects." />
           </label>
           <div className="space-y-3">
-            <Slider
-              value={[params.effectSize || 0]}
-              min={0}
-              max={params.test && EFFECT_SIZE_MAP[params.test] ? EFFECT_SIZE_MAP[params.test].large * 2 : 2}
-              step={0.01}
-              onValueChange={(value) => handleParameterChange("effectSize", value[0])}
-            />
-            <div className="flex justify-between text-xs text-muted-foreground px-1">
-              <span>0</span>
-              {params.test && EFFECT_SIZE_MAP[params.test] && (
-                <>
-                  <span>Small ({EFFECT_SIZE_MAP[params.test].small})</span>
-                  <span>Medium ({EFFECT_SIZE_MAP[params.test].medium})</span>
-                  <span>Large ({EFFECT_SIZE_MAP[params.test].large})</span>
-                </>
-              )}
-            </div>
+            {params.test && EFFECT_SIZE_MAP[params.test] ? (
+              <SliderWithLabels
+                value={[params.effectSize || 0]}
+                min={0}
+                max={Math.max(2, EFFECT_SIZE_MAP[params.test].large * 2.5)}
+                step={0.01}
+                onValueChange={(value) => handleParameterChange("effectSize", value[0])}
+                labels={[
+                  { value: 0, label: '0' },
+                  { value: EFFECT_SIZE_MAP[params.test].small, label: `Small (${EFFECT_SIZE_MAP[params.test].small})`, highlight: true },
+                  { value: EFFECT_SIZE_MAP[params.test].medium, label: `Medium (${EFFECT_SIZE_MAP[params.test].medium})`, highlight: true },
+                  { value: EFFECT_SIZE_MAP[params.test].large, label: `Large (${EFFECT_SIZE_MAP[params.test].large})`, highlight: true }
+                ]}
+                formatValue={(val) => val.toFixed(3)}
+              />
+            ) : (
+              <SliderWithLabels
+                value={[params.effectSize || 0]}
+                min={0}
+                max={2}
+                step={0.01}
+                onValueChange={(value) => handleParameterChange("effectSize", value[0])}
+                labels={[
+                  { value: 0, label: '0' },
+                  { value: 0.5, label: '0.5' },
+                  { value: 1, label: '1.0' },
+                  { value: 2, label: '2.0' }
+                ]}
+                formatValue={(val) => val.toFixed(3)}
+              />
+            )}
             <Input 
               type="number" 
               min="0" 
@@ -263,19 +277,20 @@ export function PowerControlsEnhanced({
             <InfoTooltip content="The probability of rejecting the null hypothesis when it is true (Type I error rate). Lower values are more conservative but require larger samples. The choice depends on the consequences of false positives in your research context." />
           </label>
           <div className="space-y-3">
-            <Slider
+            <SliderWithLabels
               value={[params.significanceLevel || 0.05]}
               min={0.001}
               max={0.1}
               step={0.001}
               onValueChange={(value) => handleParameterChange("significanceLevel", value[0])}
+              labels={[
+                { value: 0.001, label: '0.001' },
+                { value: 0.01, label: '0.01' },
+                { value: 0.05, label: '0.05', highlight: true },
+                { value: 0.1, label: '0.10' }
+              ]}
+              formatValue={(val) => val.toFixed(4)}
             />
-            <div className="flex justify-between text-xs text-muted-foreground px-1">
-              <span>0.001</span>
-              <span>0.01</span>
-              <span>0.05</span>
-              <span>0.10</span>
-            </div>
             <Input 
               type="number" 
               min="0.001" 
@@ -320,19 +335,20 @@ export function PowerControlsEnhanced({
             <InfoTooltip content="The probability of detecting a true effect when it exists (sensitivity). Higher power reduces the risk of Type II errors but may require larger samples. The choice depends on the consequences of missing true effects in your research." />
           </label>
           <div className="space-y-3">
-            <Slider
+            <SliderWithLabels
               value={[params.power || 0.8]}
               min={0.5}
               max={0.999}
               step={0.001}
               onValueChange={(value) => handleParameterChange("power", value[0])}
+              labels={[
+                { value: 0.5, label: '0.50' },
+                { value: 0.8, label: '0.80', highlight: true },
+                { value: 0.95, label: '0.95' },
+                { value: 0.99, label: '0.99' }
+              ]}
+              formatValue={(val) => val.toFixed(3)}
             />
-            <div className="flex justify-between text-xs text-muted-foreground px-1">
-              <span>0.5</span>
-              <span>0.8</span>
-              <span>0.95</span>
-              <span>0.99</span>
-            </div>
             <Input 
               type="number" 
               min="0.5" 
