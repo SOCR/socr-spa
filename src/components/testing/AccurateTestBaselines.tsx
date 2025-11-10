@@ -200,6 +200,42 @@ export const getAccurateTestCase = (testId: string) => {
         }
       };
 
+    case "mmrm-power":
+      return {
+        expectedResults: { power: 0.800 },
+        tolerance: 0.05,
+        params: {
+          test: "mmrm" as StatisticalTest,
+          sampleSize: 200,
+          effectSize: 0.5,
+          significanceLevel: 0.05,
+          power: null,
+          timePoints: 4,
+          dropoutRate: 0.15,
+          withinCorrelation: 0.5,
+          groups: 2,
+          tailType: "two" as const
+        }
+      };
+
+    case "mmrm-sample-size":
+      return {
+        expectedResults: { sampleSize: 200 },
+        tolerance: 10,
+        params: {
+          test: "mmrm" as StatisticalTest,
+          sampleSize: null,
+          effectSize: 0.5,
+          significanceLevel: 0.05,
+          power: 0.80,
+          timePoints: 4,
+          dropoutRate: 0.15,
+          withinCorrelation: 0.5,
+          groups: 2,
+          tailType: "two" as const
+        }
+      };
+
     default:
       return null;
   }

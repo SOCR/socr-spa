@@ -124,6 +124,75 @@ export function AdditionalControls({ params, handleParameterChange }: Additional
           />
         </div>
       )}
+
+      {additionalControls.timePoints && (
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Number of Time Points
+            <InfoTooltip content="Number of measurement occasions including baseline. Example: baseline + 3 follow-ups = 4 time points." />
+          </label>
+          <Input 
+            type="number" 
+            min="2" 
+            max="10" 
+            value={params.timePoints || 4} 
+            onChange={(e) => handleParameterChange("timePoints", Number(e.target.value))}
+          />
+        </div>
+      )}
+
+      {additionalControls.dropoutRate && (
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Expected Dropout Rate
+            <InfoTooltip content="Proportion of participants expected to drop out by the final time point. Enter as decimal (e.g., 0.05 = 5%)." />
+          </label>
+          <Input 
+            type="number" 
+            min="0" 
+            max="0.5" 
+            step="0.01" 
+            value={params.dropoutRate || 0.05} 
+            onChange={(e) => handleParameterChange("dropoutRate", Number(e.target.value))}
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            {((params.dropoutRate || 0.05) * 100).toFixed(1)}% dropout rate
+          </p>
+        </div>
+      )}
+
+      {additionalControls.withinCorrelation && (
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Within-Subject Correlation
+            <InfoTooltip content="Correlation between repeated measurements on the same participant. Typically 0.3-0.7 for clinical trials. Higher correlation increases power." />
+          </label>
+          <Input 
+            type="number" 
+            min="0" 
+            max="0.95" 
+            step="0.05" 
+            value={params.withinCorrelation || 0.5} 
+            onChange={(e) => handleParameterChange("withinCorrelation", Number(e.target.value))}
+          />
+        </div>
+      )}
+
+      {additionalControls.degreesOfFreedom && (
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Degrees of Freedom
+            <InfoTooltip content="The degrees of freedom for the model, representing the complexity of the structural equation model." />
+          </label>
+          <Input 
+            type="number" 
+            min="1" 
+            max="100" 
+            value={params.degreesOfFreedom || 10} 
+            onChange={(e) => handleParameterChange("degreesOfFreedom", Number(e.target.value))}
+          />
+        </div>
+      )}
     </div>
   );
 }

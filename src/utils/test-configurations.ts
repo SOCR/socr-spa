@@ -199,5 +199,25 @@ export const TEST_CONFIGURATIONS: TestConfigMap = {
     defaultValues: {
       degreesOfFreedom: 10
     }
+  },
+  
+  "mmrm": {
+    name: "Mixed-Model Repeated Measures (MMRM)",
+    description: "Longitudinal analysis for repeated measures with group × time interaction, accounting for dropout and within-subject correlation",
+    parameters: ["sampleSize", "effectSize", "significanceLevel", "power"],
+    additionalControls: {
+      groups: true,
+      timePoints: true,
+      dropoutRate: true,
+      withinCorrelation: true,
+      tailType: true
+    },
+    defaultValues: {
+      groups: 2,
+      timePoints: 4,
+      dropoutRate: 0.05,
+      withinCorrelation: 0.5,
+      tailType: "two"
+    }
   }
 };

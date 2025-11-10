@@ -15,7 +15,8 @@ export type StatisticalTest =
   "multiple-regression" |
   "set-correlation" |
   "multivariate" |
-  "sem";  // Added SEM test type
+  "sem" |
+  "mmrm";  // Mixed-Model Repeated Measures
 
 export interface PowerParameters {
   test: StatisticalTest;
@@ -31,6 +32,9 @@ export interface PowerParameters {
   responseVariables?: number | null;
   degreesOfFreedom?: number | null; // Added for SEM
   nullRmsea?: number | null; // Added for SEM close-fit testing
+  timePoints?: number | null; // Number of measurement occasions for MMRM
+  dropoutRate?: number | null; // Expected dropout rate for MMRM
+  withinCorrelation?: number | null; // Correlation between repeated measures for MMRM
 }
 
 export interface TestConfig {
@@ -45,6 +49,9 @@ export interface TestConfig {
     predictors?: boolean;
     responseVariables?: boolean;
     degreesOfFreedom?: boolean;
+    timePoints?: boolean;
+    dropoutRate?: boolean;
+    withinCorrelation?: boolean;
   };
   defaultValues?: Partial<PowerParameters>;
 }

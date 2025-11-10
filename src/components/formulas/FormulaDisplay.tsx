@@ -20,6 +20,7 @@ import {
   MultivariateFormula
 } from './testFormulas';
 import { SEMFormula } from './SEMFormula';
+import { MMRMFormula } from './MMRMFormula';
 
 interface FormulaDisplayProps {
   test: StatisticalTest;
@@ -61,6 +62,8 @@ export function FormulaDisplay({ test }: FormulaDisplayProps) {
       return <MultivariateFormula />;
     case 'sem':
       return <SEMFormula />;
+    case 'mmrm':
+      return <MMRMFormula />;
     default:
       return null;
   }

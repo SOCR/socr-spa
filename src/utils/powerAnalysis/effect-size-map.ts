@@ -105,5 +105,11 @@ export const EFFECT_SIZE_MAP = {
     medium: 0.08,
     large: 0.1,
     label: "RMSEA"
+  },
+  "mmrm": {
+    small: 0.2,
+    medium: 0.5,
+    large: 0.8,
+    label: "δ (standardized difference)"
   }
 };

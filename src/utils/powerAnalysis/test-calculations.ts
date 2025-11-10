@@ -196,3 +196,29 @@ export const powerSEM = (
   };
   return goldStandardPower(params) || 0;
 };
+
+// Power calculation for MMRM (Mixed-Model Repeated Measures)
+export const powerMMRM = (
+  sampleSize: number,
+  effectSize: number,
+  alpha: number,
+  timePoints: number = 4,
+  dropoutRate: number = 0.05,
+  correlation: number = 0.5,
+  groups: number = 2,
+  tailType: "one" | "two" = "two"
+): number => {
+  const params: PowerParameters = {
+    test: "mmrm",
+    sampleSize,
+    effectSize,
+    significanceLevel: alpha,
+    power: null,
+    timePoints,
+    dropoutRate,
+    withinCorrelation: correlation,
+    groups,
+    tailType
+  };
+  return goldStandardPower(params) || 0;
+};

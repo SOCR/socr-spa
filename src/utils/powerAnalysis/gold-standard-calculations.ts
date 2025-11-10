@@ -285,6 +285,54 @@ export const goldStandardPower = (params: PowerParameters): number | null => {
       }
     }
 
+    case "mmrm": {
+      const delta = effectSize;  // Standardized effect size (difference in means / SD)
+      const n = sampleSize;       // Total sample size
+      const alpha = significanceLevel;
+      const tails = params.tailType === "one" ? 1 : 2;
+      const k = params.groups || 2;  // Number of groups
+      const timePoints = params.timePoints || 4;
+      const dropoutRate = params.dropoutRate || 0.05;
+      const rho = params.withinCorrelation || 0.5;  // Within-subject correlation
+      
+      if (timePoints < 2 || n < k * timePoints) return null;
+      
+      // Calculate retention rates (linear dropout pattern)
+      const retentionRates: number[] = [];
+      for (let t = 0; t < timePoints; t++) {
+        retentionRates.push(1 - (dropoutRate * t / (timePoints - 1)));
+      }
+      
+      // Calculate average retention rate
+      let sumRetention = 0;
+      for (let t = 0; t < timePoints; t++) {
+        sumRetention += retentionRates[t];
+      }
+      const avgRetention = sumRetention / timePoints;
+      
+      // Simplified variance inflation factor (Lu, Luo, & Chen 2008 approximation)
+      // Accounts for correlation structure and dropout pattern
+      // phi ≈ (1 - rho * avgRetention) / avgRetention
+      const phi = (1 - rho * avgRetention) / avgRetention;
+      
+      // Adjust for number of groups
+      const n_per_group = n / k;
+      
+      // Calculate non-centrality parameter
+      // For group × time interaction at final time point
+      const ncp = delta * Math.sqrt(n_per_group / (2 * phi));
+      
+      // Use z-test approximation for large samples (standard in MMRM)
+      const z_alpha = robustNormInv(1 - alpha / tails);
+      
+      if (tails === 1) {
+        return 1 - robustNormCdf(z_alpha - ncp);
+      } else {
+        const z_beta = ncp - z_alpha;
+        return robustNormCdf(z_beta);
+      }
+    }
+
     default:
       return null;
   }
