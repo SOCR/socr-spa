@@ -22,6 +22,7 @@ import {
   powerMultipleRegression,
   powerSEM
 } from './test-calculations';
+import { goldStandardPower } from './gold-standard-calculations';
 import { calculateScientificSampleSize } from './sample-size-calculations';
 import { calculateScientificEffectSize } from './effect-size-calculations';
 import { calculateScientificSignificanceLevel } from './significance-level-calculations';
@@ -133,6 +134,14 @@ export const calculateScientificPower = (params: PowerParameters): number | null
       const df = params.degreesOfFreedom || 10;
       power = powerSEM(n, es, alpha, df);
       break;
+      
+    case "mmrm":
+    case "logistic-regression": {
+      // Use gold standard calculations for these advanced tests
+      const goldPower = goldStandardPower(stabilizedParams);
+      power = goldPower !== null ? goldPower : 0.5;
+      break;
+    }
       
     default:
       power = 0.8; // Default fallback

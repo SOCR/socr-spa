@@ -41,6 +41,9 @@ export interface PowerParameters {
   predictorType?: "binary" | "continuous"; // Type of predictor variable
   predictorProportion?: number | null; // p₁: Proportion with predictor=1 (for binary)
   predictorVariance?: number | null; // σ²ₓ: Variance of continuous predictor
+  // Multivariate logistic regression parameters
+  numPredictors?: number | null; // Number of predictors in the model
+  r2Other?: number | null; // R² with other predictors (for VIF calculation)
 }
 
 export interface TestConfig {
@@ -62,6 +65,8 @@ export interface TestConfig {
     predictorType?: boolean;
     predictorProportion?: boolean;
     predictorVariance?: boolean;
+    numPredictors?: boolean;
+    r2Other?: boolean;
   };
   defaultValues?: Partial<PowerParameters>;
 }
