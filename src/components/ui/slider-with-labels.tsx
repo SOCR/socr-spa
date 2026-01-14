@@ -89,21 +89,32 @@ const SliderWithLabels = React.forwardRef<
         </Tooltip>
       </TooltipProvider>
 
-      {/* Proportionally positioned labels */}
+      {/* Proportionally positioned labels with overlap prevention */}
       {labels.length > 0 && (
-        <div className="relative w-full mt-2" style={{ height: '2.5rem' }}>
+        <div className="relative w-full mt-2" style={{ height: '3rem' }}>
           {labels.map((label, idx) => {
             const position = calculatePosition(label.value);
+            
+            // Check for overlap with previous label (positions within 18% are considered overlapping)
+            let isStaggered = false;
+            if (idx > 0) {
+              const prevPosition = calculatePosition(labels[idx - 1].value);
+              if (Math.abs(position - prevPosition) < 18) {
+                isStaggered = true;
+              }
+            }
+            
             return (
               <div
                 key={idx}
                 className={cn(
-                  "absolute text-xs whitespace-nowrap",
+                  "absolute text-xs whitespace-nowrap transition-all",
                   label.highlight ? "text-foreground font-medium" : "text-muted-foreground"
                 )}
                 style={{
                   left: `${position}%`,
                   transform: 'translateX(-50%)',
+                  top: isStaggered ? '1.25rem' : '0',
                 }}
               >
                 {label.label}

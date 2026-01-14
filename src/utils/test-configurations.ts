@@ -230,14 +230,18 @@ export const TEST_CONFIGURATIONS: TestConfigMap = {
       baselineProb: true,
       predictorType: true,
       predictorProportion: true,
-      predictorVariance: true
+      predictorVariance: true,
+      numPredictors: true,
+      r2Other: true
     },
     defaultValues: {
       tailType: "two",
       baselineProb: 0.25,
       predictorType: "continuous",
       predictorProportion: 0.5,
-      predictorVariance: 1.0
+      predictorVariance: 1.0,
+      numPredictors: 1,
+      r2Other: 0
     }
   }
 };

@@ -335,6 +335,7 @@ export const goldStandardPower = (params: PowerParameters): number | null => {
 
     case "logistic-regression": {
       // Hsieh, Bloch, and Larsen (1998) method for logistic regression power
+      // Extended to support multiple predictors with VIF adjustment
       const logOR = effectSize;  // Effect size is log(OR)
       const n = sampleSize;
       const alpha = significanceLevel;
@@ -350,6 +351,11 @@ export const goldStandardPower = (params: PowerParameters): number | null => {
       const OR = Math.exp(logOR);
       const odds1 = odds0 * OR;
       const P1 = odds1 / (1 + odds1);
+      
+      // Multivariate adjustment: Variance Inflation Factor (VIF)
+      // VIF = 1 / (1 - R²_other) where R²_other is the R² of the predictor with other predictors
+      const r2Other = params.r2Other || 0;
+      const VIF = 1 / (1 - r2Other);
       
       // Calculate average probability and variance component based on predictor type
       let PA: number;
@@ -372,9 +378,12 @@ export const goldStandardPower = (params: PowerParameters): number | null => {
         varianceAdjustment = sigmaX2;
       }
       
+      // Apply VIF adjustment - reduces effective variance when predictors are correlated
+      const adjustedVariance = varianceAdjustment / VIF;
+      
       // Calculate non-centrality parameter based on Hsieh formula
-      // ncp = |log(OR)| * sqrt(n * PA * (1-PA) * varianceAdjustment)
-      const ncp = Math.abs(logOR) * Math.sqrt(n * PA * (1 - PA) * varianceAdjustment);
+      // ncp = |log(OR)| * sqrt(n * PA * (1-PA) * adjustedVariance)
+      const ncp = Math.abs(logOR) * Math.sqrt(n * PA * (1 - PA) * adjustedVariance);
       
       // Z-test approximation for Wald test
       const z_alpha = robustNormInv(1 - alpha / tails);

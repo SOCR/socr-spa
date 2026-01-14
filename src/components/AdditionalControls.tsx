@@ -269,18 +269,77 @@ export function AdditionalControls({ params, handleParameterChange }: Additional
         </div>
       )}
 
+      {/* Number of Predictors for multivariate logistic regression */}
+      {additionalControls.numPredictors && (
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Number of Predictors
+            <InfoTooltip content="Total number of predictor variables in the logistic regression model. More predictors require larger samples." />
+          </label>
+          <Input 
+            type="number" 
+            min="1" 
+            max="20" 
+            value={params.numPredictors || 1} 
+            onChange={(e) => handleParameterChange("numPredictors", Number(e.target.value))}
+          />
+          {params.numPredictors && params.numPredictors > 1 && params.baselineProb && params.sampleSize && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Rule of thumb: ≥10 events per predictor. 
+              Expected events: ~{Math.round((params.baselineProb || 0.25) * (params.sampleSize || 100))}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* R² with Other Predictors for VIF adjustment */}
+      {additionalControls.r2Other && (params.numPredictors || 1) > 1 && (
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            R² with Other Predictors
+            <InfoTooltip content="Squared multiple correlation of the target predictor with all other predictors. Used to calculate Variance Inflation Factor (VIF). Higher values reduce power due to multicollinearity." />
+          </label>
+          <Input 
+            type="number" 
+            min="0" 
+            max="0.95" 
+            step="0.05" 
+            value={params.r2Other || 0} 
+            onChange={(e) => handleParameterChange("r2Other", Number(e.target.value))}
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            VIF = {(1 / (1 - (params.r2Other || 0))).toFixed(2)}
+            {(params.r2Other || 0) >= 0.5 && " (high multicollinearity)"}
+          </p>
+        </div>
+      )}
+
       {/* Display calculated P₁ for logistic regression */}
       {params.test === "logistic-regression" && params.effectSize && params.baselineProb && (
-        <div className="bg-muted/30 p-3 rounded-md text-sm">
-          <p className="font-medium mb-1">Calculated Values:</p>
-          <p>Odds Ratio (OR) = {Math.exp(params.effectSize).toFixed(3)}</p>
+        <div className="bg-muted/30 p-3 rounded-md text-sm space-y-1">
+          <p className="font-medium mb-2">Calculated Values:</p>
+          <div className="flex justify-between">
+            <span>Odds Ratio (OR)</span>
+            <span className="font-mono">{Math.exp(params.effectSize).toFixed(3)}</span>
+          </div>
           {(() => {
             const P0 = params.baselineProb || 0.25;
             const OR = Math.exp(params.effectSize);
             const odds0 = P0 / (1 - P0);
             const odds1 = odds0 * OR;
             const P1 = odds1 / (1 + odds1);
-            return <p>P₁ (exposed probability) = {P1.toFixed(3)}</p>;
+            return (
+              <>
+                <div className="flex justify-between">
+                  <span>P₀ (baseline prob.)</span>
+                  <span className="font-mono">{P0.toFixed(3)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>P₁ (exposed prob.)</span>
+                  <span className="font-mono">{P1.toFixed(3)}</span>
+                </div>
+              </>
+            );
           })()}
         </div>
       )}
