@@ -2,6 +2,7 @@ import { PowerCalculator } from "@/components/PowerCalculator";
 import { PowerInformation } from "@/components/PowerInformation";
 import { PowerAnalysisGuideSimple } from "@/components/documentation/PowerAnalysisGuideSimple";
 import { PowerAnalysisComprehensiveGuide } from "@/components/documentation/PowerAnalysisComprehensiveGuide";
+import { SimulationPowerCalculator } from "@/components/SimulationPowerCalculator";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,7 @@ import { Button } from "@/components/ui/button";
 const Index = () => {
   const [showInfo, setShowInfo] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
-
+  const [analysisMode, setAnalysisMode] = useState<"analytical" | "simulation">("analytical");
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       <header className="py-6 border-b bg-white shadow-sm">
@@ -32,25 +33,49 @@ const Index = () => {
             </a>{" "}
             for calculating statistical power, sample size, effect size, and significance level
           </p>
-          <div className="flex justify-center gap-4 mt-4">
-            <Button variant="outline" onClick={() => setShowInfo(!showInfo)} className="bg-blue-50 hover:bg-blue-100">
-              {showInfo ? "Hide Basic Info" : "Show Basic Info"}
+          {/* Mode Toggle */}
+          <div className="flex justify-center gap-2 mt-4">
+            <Button
+              variant={analysisMode === "analytical" ? "default" : "outline"}
+              onClick={() => setAnalysisMode("analytical")}
+            >
+              Analytical Power Analysis
             </Button>
             <Button
-              variant="outline"
-              onClick={() => setShowGuide(!showGuide)}
-              className="bg-green-50 hover:bg-green-100"
+              variant={analysisMode === "simulation" ? "default" : "outline"}
+              onClick={() => setAnalysisMode("simulation")}
+              className="bg-purple-50 hover:bg-purple-100 border-purple-200"
             >
-              {showGuide ? "Hide Comprehensive Guide" : "Show Comprehensive Guide"}
+              Simulation-Based Power
             </Button>
           </div>
+          {analysisMode === "analytical" && (
+            <div className="flex justify-center gap-4 mt-4">
+              <Button variant="outline" onClick={() => setShowInfo(!showInfo)} className="bg-blue-50 hover:bg-blue-100">
+                {showInfo ? "Hide Basic Info" : "Show Basic Info"}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowGuide(!showGuide)}
+                className="bg-green-50 hover:bg-green-100"
+              >
+                {showGuide ? "Hide Comprehensive Guide" : "Show Comprehensive Guide"}
+              </Button>
+            </div>
+          )}
         </div>
       </header>
       <main className="py-8">
         <ErrorBoundary fallbackMessage="Error loading application components. Please refresh the page.">
-          {showInfo && <PowerInformation />}
-          <PowerCalculator />
-          {showGuide && <PowerAnalysisComprehensiveGuide />}
+          {analysisMode === "analytical" ? (
+            <>
+              {showInfo && <PowerInformation />}
+              <PowerCalculator />
+              {showGuide && <PowerAnalysisComprehensiveGuide />}
+            </>
+          ) : (
+            <SimulationPowerCalculator />
+          )}
         </ErrorBoundary>
       </main>
       <footer className="py-6 border-t bg-white">
