@@ -16,7 +16,8 @@ export type StatisticalTest =
   "set-correlation" |
   "multivariate" |
   "sem" |
-  "mmrm";  // Mixed-Model Repeated Measures
+  "mmrm" |
+  "logistic-regression";  // Logistic Regression for binary outcomes
 
 export interface PowerParameters {
   test: StatisticalTest;
@@ -35,6 +36,11 @@ export interface PowerParameters {
   timePoints?: number | null; // Number of measurement occasions for MMRM
   dropoutRate?: number | null; // Expected dropout rate for MMRM
   withinCorrelation?: number | null; // Correlation between repeated measures for MMRM
+  // Logistic Regression parameters
+  baselineProb?: number | null; // P₀: Baseline probability of outcome
+  predictorType?: "binary" | "continuous"; // Type of predictor variable
+  predictorProportion?: number | null; // p₁: Proportion with predictor=1 (for binary)
+  predictorVariance?: number | null; // σ²ₓ: Variance of continuous predictor
 }
 
 export interface TestConfig {
@@ -52,6 +58,10 @@ export interface TestConfig {
     timePoints?: boolean;
     dropoutRate?: boolean;
     withinCorrelation?: boolean;
+    baselineProb?: boolean;
+    predictorType?: boolean;
+    predictorProportion?: boolean;
+    predictorVariance?: boolean;
   };
   defaultValues?: Partial<PowerParameters>;
 }

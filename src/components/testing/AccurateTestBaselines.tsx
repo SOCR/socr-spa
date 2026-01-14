@@ -236,6 +236,57 @@ export const getAccurateTestCase = (testId: string) => {
         }
       };
 
+    case "logistic-regression-power":
+      return {
+        expectedResults: { power: 0.800 },
+        tolerance: 0.05,
+        params: {
+          test: "logistic-regression" as StatisticalTest,
+          sampleSize: 200,
+          effectSize: 0.69,  // log(2.0) - medium effect (OR = 2.0)
+          significanceLevel: 0.05,
+          power: null,
+          baselineProb: 0.25,
+          predictorType: "continuous" as const,
+          predictorVariance: 1.0,
+          tailType: "two" as const
+        }
+      };
+
+    case "logistic-regression-binary":
+      return {
+        expectedResults: { power: 0.800 },
+        tolerance: 0.05,
+        params: {
+          test: "logistic-regression" as StatisticalTest,
+          sampleSize: 250,
+          effectSize: 0.69,  // OR = 2.0
+          significanceLevel: 0.05,
+          power: null,
+          baselineProb: 0.25,
+          predictorType: "binary" as const,
+          predictorProportion: 0.5,
+          tailType: "two" as const
+        }
+      };
+
+    case "logistic-regression-sample-size":
+      return {
+        expectedResults: { sampleSize: 200 },
+        tolerance: 20,  // +/- 20 participants
+        params: {
+          test: "logistic-regression" as StatisticalTest,
+          sampleSize: null,
+          effectSize: 0.69,
+          significanceLevel: 0.05,
+          power: 0.80,
+          baselineProb: 0.25,
+          predictorType: "continuous" as const,
+          predictorVariance: 1.0,
+          tailType: "two" as const
+        }
+      };
+
     default:
       return null;
   }

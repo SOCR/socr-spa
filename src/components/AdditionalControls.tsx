@@ -193,6 +193,97 @@ export function AdditionalControls({ params, handleParameterChange }: Additional
           />
         </div>
       )}
+
+      {additionalControls.baselineProb && (
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Baseline Probability (P₀)
+            <InfoTooltip content="Probability of the outcome when the predictor is at its reference level (0 for binary, mean for continuous). Typically the overall event rate in the population." />
+          </label>
+          <Input 
+            type="number" 
+            min="0.01" 
+            max="0.99" 
+            step="0.01" 
+            value={params.baselineProb || 0.25} 
+            onChange={(e) => handleParameterChange("baselineProb", Number(e.target.value))}
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            {((params.baselineProb || 0.25) * 100).toFixed(1)}% baseline event rate
+          </p>
+        </div>
+      )}
+
+      {additionalControls.predictorType && (
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Predictor Type
+            <InfoTooltip content="Binary: categorical predictor (e.g., treatment/control). Continuous: numeric predictor (e.g., age, blood pressure)." />
+          </label>
+          <Select 
+            value={params.predictorType || "continuous"} 
+            onValueChange={(value) => handleParameterChange("predictorType", value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select predictor type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="binary">Binary (0/1)</SelectItem>
+              <SelectItem value="continuous">Continuous</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {additionalControls.predictorProportion && params.predictorType === "binary" && (
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Proportion with Predictor = 1 (p₁)
+            <InfoTooltip content="Proportion of sample with the predictor present. For balanced groups, use 0.5." />
+          </label>
+          <Input 
+            type="number" 
+            min="0.1" 
+            max="0.9" 
+            step="0.05" 
+            value={params.predictorProportion || 0.5} 
+            onChange={(e) => handleParameterChange("predictorProportion", Number(e.target.value))}
+          />
+        </div>
+      )}
+
+      {additionalControls.predictorVariance && params.predictorType === "continuous" && (
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Predictor Variance (σ²ₓ)
+            <InfoTooltip content="Variance of the continuous predictor. Use 1.0 for standardized predictors. For unstandardized predictors, enter the actual variance." />
+          </label>
+          <Input 
+            type="number" 
+            min="0.01" 
+            max="100" 
+            step="0.1" 
+            value={params.predictorVariance || 1.0} 
+            onChange={(e) => handleParameterChange("predictorVariance", Number(e.target.value))}
+          />
+        </div>
+      )}
+
+      {/* Display calculated P₁ for logistic regression */}
+      {params.test === "logistic-regression" && params.effectSize && params.baselineProb && (
+        <div className="bg-muted/30 p-3 rounded-md text-sm">
+          <p className="font-medium mb-1">Calculated Values:</p>
+          <p>Odds Ratio (OR) = {Math.exp(params.effectSize).toFixed(3)}</p>
+          {(() => {
+            const P0 = params.baselineProb || 0.25;
+            const OR = Math.exp(params.effectSize);
+            const odds0 = P0 / (1 - P0);
+            const odds1 = odds0 * OR;
+            const P1 = odds1 / (1 + odds1);
+            return <p>P₁ (exposed probability) = {P1.toFixed(3)}</p>;
+          })()}
+        </div>
+      )}
     </div>
   );
 }

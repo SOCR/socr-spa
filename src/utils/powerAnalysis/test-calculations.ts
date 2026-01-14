@@ -222,3 +222,29 @@ export const powerMMRM = (
   };
   return goldStandardPower(params) || 0;
 };
+
+// Power calculation for Logistic Regression
+export const powerLogisticRegression = (
+  sampleSize: number,
+  effectSize: number,  // log(OR)
+  alpha: number,
+  baselineProb: number = 0.25,
+  predictorType: "binary" | "continuous" = "continuous",
+  predictorProportion: number = 0.5,
+  predictorVariance: number = 1.0,
+  tailType: "one" | "two" = "two"
+): number => {
+  const params: PowerParameters = {
+    test: "logistic-regression",
+    sampleSize,
+    effectSize,
+    significanceLevel: alpha,
+    power: null,
+    baselineProb,
+    predictorType,
+    predictorProportion,
+    predictorVariance,
+    tailType
+  };
+  return goldStandardPower(params) || 0;
+};

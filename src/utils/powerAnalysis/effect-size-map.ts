@@ -111,5 +111,11 @@ export const EFFECT_SIZE_MAP = {
     medium: 0.5,
     large: 0.8,
     label: "δ (standardized difference)"
+  },
+  "logistic-regression": {
+    small: 0.36,    // OR ≈ 1.44, log(1.44) ≈ 0.36
+    medium: 0.69,   // OR = 2.0, log(2.0) ≈ 0.69
+    large: 1.10,    // OR = 3.0, log(3.0) ≈ 1.10
+    label: "log(OR)"
   }
 };
