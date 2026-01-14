@@ -21,6 +21,7 @@ import {
 } from './testFormulas';
 import { SEMFormula } from './SEMFormula';
 import { MMRMFormula } from './MMRMFormula';
+import { LogisticRegressionFormula } from './LogisticRegressionFormula';
 
 interface FormulaDisplayProps {
   test: StatisticalTest;
@@ -64,6 +65,8 @@ export function FormulaDisplay({ test }: FormulaDisplayProps) {
       return <SEMFormula />;
     case 'mmrm':
       return <MMRMFormula />;
+    case 'logistic-regression':
+      return <LogisticRegressionFormula />;
     default:
       return null;
   }

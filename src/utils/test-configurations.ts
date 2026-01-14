@@ -219,5 +219,25 @@ export const TEST_CONFIGURATIONS: TestConfigMap = {
       withinCorrelation: 0.5,
       tailType: "two"
     }
+  },
+  
+  "logistic-regression": {
+    name: "Logistic Regression",
+    description: "Models relationship between predictors and binary outcome. Power depends on odds ratio, baseline probability, and sample size.",
+    parameters: ["sampleSize", "effectSize", "significanceLevel", "power"],
+    additionalControls: {
+      tailType: true,
+      baselineProb: true,
+      predictorType: true,
+      predictorProportion: true,
+      predictorVariance: true
+    },
+    defaultValues: {
+      tailType: "two",
+      baselineProb: 0.25,
+      predictorType: "continuous",
+      predictorProportion: 0.5,
+      predictorVariance: 1.0
+    }
   }
 };

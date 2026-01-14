@@ -333,6 +333,62 @@ export const goldStandardPower = (params: PowerParameters): number | null => {
       }
     }
 
+    case "logistic-regression": {
+      // Hsieh, Bloch, and Larsen (1998) method for logistic regression power
+      const logOR = effectSize;  // Effect size is log(OR)
+      const n = sampleSize;
+      const alpha = significanceLevel;
+      const tails = params.tailType === "one" ? 1 : 2;
+      
+      // Get baseline probability
+      const P0 = params.baselineProb || 0.25;
+      
+      // Calculate odds at baseline
+      const odds0 = P0 / (1 - P0);
+      
+      // Calculate probability in exposed group
+      const OR = Math.exp(logOR);
+      const odds1 = odds0 * OR;
+      const P1 = odds1 / (1 + odds1);
+      
+      // Calculate average probability and variance component based on predictor type
+      let PA: number;
+      let varianceAdjustment: number;
+      
+      if (params.predictorType === "binary") {
+        // Binary predictor: weighted average based on predictor proportion
+        const p1 = params.predictorProportion || 0.5;
+        const p0 = 1 - p1;
+        PA = p0 * P0 + p1 * P1;
+        
+        // Variance for binary predictor: p₁ * p₀
+        varianceAdjustment = p1 * p0;
+      } else {
+        // Continuous predictor (standardized σ²ₓ = 1 by default)
+        const sigmaX2 = params.predictorVariance || 1.0;
+        PA = (P0 + P1) / 2;  // Use average probability
+        
+        // Variance for continuous predictor: σ²ₓ
+        varianceAdjustment = sigmaX2;
+      }
+      
+      // Calculate non-centrality parameter based on Hsieh formula
+      // ncp = |log(OR)| * sqrt(n * PA * (1-PA) * varianceAdjustment)
+      const ncp = Math.abs(logOR) * Math.sqrt(n * PA * (1 - PA) * varianceAdjustment);
+      
+      // Z-test approximation for Wald test
+      const z_alpha = robustNormInv(1 - alpha / tails);
+      
+      if (tails === 1) {
+        return 1 - robustNormCdf(z_alpha - ncp);
+      } else {
+        // Two-tailed: power = Φ(ncp - z_alpha) + Φ(-ncp - z_alpha)
+        const power_upper = 1 - robustNormCdf(z_alpha - ncp);
+        const power_lower = robustNormCdf(-z_alpha - ncp);
+        return power_upper + power_lower;
+      }
+    }
+
     default:
       return null;
   }
