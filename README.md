@@ -90,5 +90,5 @@ Important Considerations
 
 ## References
  - [SOCR](https://socr.umich.edu),  [SOCR HTML5 Webapps](https://socr.umich.edu/HTML5/), [SOCR GAIMs](https://socr.umich.edu/GAIM/)
- - [Live SOCR Statistical Power Analyzer Webapp]([https://ibc-broad.gray-rain.com/](https://socr-spa.gray-rain.com/))
+ - [Live SOCR Statistical Power Analyzer Webapp](https://power.statisticalcomputing.org/)
  - [Source code on GitHub](https://github.com/SOCR/socr-spa)
